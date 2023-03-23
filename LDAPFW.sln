@@ -1,0 +1,69 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32804.467
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ldapFwManager", "LDAPFW\LDAPFW.vcxproj", "{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408} = {362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60} = {48DC6DD2-92B9-49D9-AD47-A014E863FE60}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ldapFW", "ldapFirewall\ldapFirewall.vcxproj", "{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}"
+	ProjectSection(ProjectDependencies) = postProject
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1} = {203284F5-C86F-41D5-B76D-C48F7CB8BDA1}
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60} = {48DC6DD2-92B9-49D9-AD47-A014E863FE60}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ldapMessages", "ldapMessages\ldapMessages.vcxproj", "{48DC6DD2-92B9-49D9-AD47-A014E863FE60}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ldapCommon", "ldapCommon\ldapCommon.vcxproj", "{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Debug|x64.ActiveCfg = Debug|x64
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Debug|x64.Build.0 = Debug|x64
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Debug|x86.ActiveCfg = Debug|Win32
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Debug|x86.Build.0 = Debug|Win32
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Release|x64.ActiveCfg = Release|x64
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Release|x64.Build.0 = Release|x64
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Release|x86.ActiveCfg = Release|Win32
+		{9000F4F3-A30B-4EC2-8421-C7CD1DE1FE7E}.Release|x86.Build.0 = Release|Win32
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Debug|x64.ActiveCfg = Debug|x64
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Debug|x64.Build.0 = Debug|x64
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Debug|x86.ActiveCfg = Debug|Win32
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Debug|x86.Build.0 = Debug|Win32
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Release|x64.ActiveCfg = Release|x64
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Release|x64.Build.0 = Release|x64
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Release|x86.ActiveCfg = Release|Win32
+		{362DC0E0-8B8C-4D2B-B13B-DEE3152CF408}.Release|x86.Build.0 = Release|Win32
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Debug|x64.ActiveCfg = Debug|x64
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Debug|x64.Build.0 = Debug|x64
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Debug|x86.ActiveCfg = Debug|Win32
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Debug|x86.Build.0 = Debug|Win32
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Release|x64.ActiveCfg = Release|x64
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Release|x64.Build.0 = Release|x64
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Release|x86.ActiveCfg = Release|Win32
+		{48DC6DD2-92B9-49D9-AD47-A014E863FE60}.Release|x86.Build.0 = Release|Win32
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Debug|x64.ActiveCfg = Debug|x64
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Debug|x64.Build.0 = Debug|x64
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Debug|x86.ActiveCfg = Debug|Win32
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Debug|x86.Build.0 = Debug|Win32
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Release|x64.ActiveCfg = Release|x64
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Release|x64.Build.0 = Release|x64
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Release|x86.ActiveCfg = Release|Win32
+		{203284F5-C86F-41D5-B76D-C48F7CB8BDA1}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F62096FF-437F-4856-805D-F96135921286}
+	EndGlobalSection
+EndGlobal

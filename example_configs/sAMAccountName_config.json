@@ -1,0 +1,17 @@
+{
+    "rules": [
+        {
+            "operations": ["add"],
+            "ips": ["*"],
+            "users": ["*"],
+            "action": "block"
+        },
+        {
+            "operations": ["*"],
+            "ips": ["*"],
+            "users": ["*"],
+            "action": "allow"
+        }
+    ],
+	"suppressAudit": ["search"]
+}
