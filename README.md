@@ -8,6 +8,8 @@
 Its primary use-cases are to protect Domain Controllers, block LDAP-based attacks and tightly control access to the Active Directory schema (e.g enforcing read-only access for users).<br>
 The tool is written in C++ and makes use of the [Microsoft Detours](https://github.com/microsoft/Detours) and [JsonCpp](https://github.com/open-source-parsers/jsoncpp) packages.
 
+To get started, check out our [blog post](https://zeronetworks.com/blog/ldap-firewall-level-up-your-dc-security/) and [tutorial video](https://www.youtube.com/watch?v=CmV9SDbFW2c).
+
 ## Main Features
 - Allow / block incoming LDAP queries based on different parameters (operation type, source IP, user, DN etc.)
 - Event logging for LDAP queries
@@ -123,7 +125,7 @@ Handles writing audit messages to the Windows Event Log, which are written to `A
 Yes! Don't be shy to do a pull request.
 
 # We would love to hear from you!
-For any questions, issues, or simply to shout out, join our [-273°C Slack channel](https://join.slack.com/t/minus273celsius/shared_invite/zt-1oaog9bfb-LBZwqzm_EhMiHnY_YKvp~w) where the community shares best practices and helps build better defenses using open-source tools.<br> 
+For any questions, issues, or simply to shout out, join our [-273°C Slack channel](https://join.slack.com/t/minus273celsius/shared_invite/zt-1ulg46s8x-N0P9sEzmv3SbYTlDXVSf2g) where the community shares best practices and helps build better defenses using open-source tools.<br> 
 We are also available at [support@zeronetworks.com](mailto:support@zeronetworks.com).
 
 # License information
