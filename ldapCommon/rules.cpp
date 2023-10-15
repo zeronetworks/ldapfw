@@ -78,15 +78,16 @@ bool isDNInRule(const Rule& rule, std::string& dn)
 
 bool isAttributeInRule(const Rule& rule, const std::vector<std::wstring>& entryList)
 {
-    if (entryList.size() == 0 || rule.Attribute.empty())
+    if (entryList.size() == 0 || isStringInVector(&ANY[0], rule.Attributes))
         return true;
 
     for (std::wstring entry : entryList) {
         size_t pos = entry.find(L":");
         std::wstring attribute = entry.substr(0, pos);
 
-        if (stringToWideString(rule.Attribute) == attribute) {
-            return true;
+        for (std::string ruleAttribute : rule.Attributes) {
+            if (stringToWideString(ruleAttribute) == attribute)
+                return true;
         }
     }
 

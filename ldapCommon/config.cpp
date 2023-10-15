@@ -145,7 +145,7 @@ Rule extractRuleFromJsonValue(const Json::Value& ruleJson)
     rule.Action = extractActionFromJsonValue(ruleJson);
     rule.Audit = extractAuditFromJsonValue(ruleJson);
     rule.DN = ruleJson.get("dn", "").asString();
-    rule.Attribute = ruleJson.get("attribute", "").asString();
+    rule.Attributes = extractVectorFromJsonArray(ruleJson, "attributes");
     rule.OID = ruleJson.get("oid", "").asString();
     rule.Filter = ruleJson.get("filter", "").asString();
 

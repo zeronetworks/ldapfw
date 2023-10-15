@@ -39,7 +39,7 @@ struct Rule {
     action Action;
     audit Audit;
     std::string DN;
-    std::string Attribute;
+    std::vector<std::string> Attributes;
     std::string OID;
     std::string Filter;
 };
