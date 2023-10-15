@@ -87,6 +87,11 @@ All configurations are set in the `config.json` file.
 {
   "rules": [
     {
+      "operations": ["search"],
+      "attributes": ["admincount", "userpassword", "msds-allowedToDelegateTo", "ms-Mcs-AdmPwd"],
+      "audit": "on"
+    },
+    {
       "operations": ["*"],
       "ips": ["*"],
       "users": ["*"],
@@ -102,16 +107,17 @@ The `rules` field specifies a list of block / allow rules similar to a classic f
 - <b>ips</b> - list of source IPs (or `*` for any)
 - <b>users</b> - list of users (or `*` for any)
 - <b>action</b> - action to perform (allow / block)
+- <b>audit</b> - log operation in the Event Log (on / off)
 - <b>dn</b> - DN set in the LDAP query (if applies)
-- <b>attribute</b> - attribute set in the LDAP query (if applies)
+- <b>attributes</b> - list of attributes set in the LDAP query (if applies)
 - <b>oid</b> - OID set in the LDAP query (if applies)
 - <b>filter</b> - filter set in a Search query (supports basic wildcard matches)
 
 During an incoming LDAP operation, the first matched rule action applies. If no rule matches, the operation is allowed by default (this behaviour can be modified by setting a global block rule as the final rule).
 
 ## Suppress Audit
-By default, Search operations do not generate event logs as they can get noisy. You can enable / disable auditing of different operations by modifying the `suppressAudit` field.
-
+By default, Search operations do not generate event logs as they can get noisy. You can enable / disable auditing of different operations by modifying the `suppressAudit` field.<br><br>
+<b>Note</b>: the `audit` rule field can be used to enable logging for specific operations even if they are suppressed (for example, Search operations with certain attributes). 
 # How LDAP Firewall works
 The LDAP Firewall is built from 3 main components:
 ### ldapFwManager
