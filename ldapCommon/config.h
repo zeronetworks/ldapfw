@@ -8,6 +8,12 @@ enum action
     block = 1
 };
 
+enum audit
+{
+    off = 0,
+    on = 1
+};
+
 enum ldapOperation
 {
     addRequest,
@@ -31,6 +37,7 @@ struct Rule {
     std::vector<std::string> IPs;
     std::vector<std::string> Users;
     action Action;
+    audit Audit;
     std::string DN;
     std::string Attribute;
     std::string OID;

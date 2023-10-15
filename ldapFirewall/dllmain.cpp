@@ -577,9 +577,9 @@ std::string extractPortFromSocketInfo(const std::string* socketInfo)
     }
 }
 
-const std::wstring getActionText(bool blockRequest)
+const std::wstring getActionText(action Action)
 {
-    if (blockRequest) {
+    if (Action == block) {
         return L"Blocked";
     }
     else {
@@ -587,9 +587,12 @@ const std::wstring getActionText(bool blockRequest)
     }
 }
 
-bool shouldAuditRequest(ldapOperation op, bool blockRequest)
+bool shouldAuditRequest(ldapOperation op, RuleAction ruleAction)
 {
-    if (blockRequest) {
+    if (ruleAction.Action == block) {
+        return true;
+    }
+    else if (ruleAction.Audit == on) {
         return true;
     }
     else if (std::find(config.suppressAudit.begin(), config.suppressAudit.end(), op) != config.suppressAudit.end()) {
@@ -674,17 +677,17 @@ int detouredAddRequest(void* pThis, void* thState, void* ldapRequest, LDAPAddMes
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapAddEventParameters eventParams = populateAddEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (!blockRequest) {
+    if (ruleAction.Action == allow) {
         result = realAddRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2);
     }
 
     debug_log(getEventAuditMessage(eventParams), debug, traceId);
 
-    if (shouldAuditRequest(addRequest, blockRequest)) {
-        ldapAddCalledEvent(eventParams, blockRequest);
+    if (shouldAuditRequest(addRequest, ruleAction)) {
+        ldapAddCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;
@@ -721,17 +724,17 @@ int detouredDelRequest(void* pThis, void* thState, void* ldapRequest, LDAPMessag
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapDelEventParameters eventParams = populateDelEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (!blockRequest) {
+    if (ruleAction.Action == allow) {
         result = realDelRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2, param8);
     }
 
     debug_log(getEventAuditMessage(eventParams), debug, traceId);
 
-    if (shouldAuditRequest(deleteRequest, blockRequest)) {
-        ldapDelCalledEvent(eventParams, blockRequest);
+    if (shouldAuditRequest(deleteRequest, ruleAction)) {
+        ldapDelCalledEvent(eventParams, ruleAction.Action);
         
     }
 
@@ -811,18 +814,18 @@ int detouredModifyRequest(void* pThis, void* thState, void* ldapRequest, LDAPMes
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapModifyEventParameters eventParams = populateModifyEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (!blockRequest) {
+    if (ruleAction.Action == allow) {
         result = realModifyRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2);
     }
 
     debug_log(getEventAuditMessage(eventParams), verbose, traceId);
     
 
-    if (shouldAuditRequest(modifyRequest, blockRequest)) {
-        ldapModifyCalledEvent(eventParams, blockRequest);  
+    if (shouldAuditRequest(modifyRequest, ruleAction)) {
+        ldapModifyCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;
@@ -863,17 +866,17 @@ int detouredModifyDNRequest(void* pThis, void* thState, void* ldapRequest, Modif
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapModifyDNEventParameters eventParams = populateModifyDNEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (!blockRequest) {
+    if (ruleAction.Action == allow) {
         result = realModifyDNRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2, param8);
     }
 
     debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
 
-    if (shouldAuditRequest(modifyDNRequest, blockRequest)) {
-        ldapModifyDNCalledEvent(eventParams, blockRequest); 
+    if (shouldAuditRequest(modifyDNRequest, ruleAction)) {
+        ldapModifyDNCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;
@@ -1237,10 +1240,10 @@ int detouredSearchRequestV1(void* pThis, void* thState, void* param1, void* para
     debug_log("Received SearchRequest message", debug, traceId);
 
     LdapSearchEventParameters eventParams = populateSearchEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (blockRequest) {
+    if (ruleAction.Action == block) {
         ldapMsg->filterMessage.nextMessage.pNext = NULL;
         ldapMsg->filterMessage.filterMessage.filterMessageType = PresenceFilter;
         ldapMsg->filterMessage.filterMessage.filterMessage.presenceFilterMessage.lenValue = 0;
@@ -1250,8 +1253,8 @@ int detouredSearchRequestV1(void* pThis, void* thState, void* param1, void* para
     int result = realSearchRequestV1(pThis, thState, param1, param2, ldapRequest, param3, ldapMsg, pReferral, pControls, ldapString1, ldapString2, param4, ldapBerval);
     debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
 
-    if (shouldAuditRequest(searchRequest, blockRequest)) {
-        ldapSearchCalledEvent(eventParams, blockRequest);
+    if (shouldAuditRequest(searchRequest, ruleAction)) {
+        ldapSearchCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;
@@ -1263,10 +1266,10 @@ int detouredSearchRequestV2(void* pThis, void* thState, void* param1, void* para
     debug_log("Received SearchRequest message", debug, traceId);
 
     LdapSearchEventParameters eventParams = populateSearchEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (blockRequest) {
+    if (ruleAction.Action == block) {
         ldapMsg->filterMessage.nextMessage.pNext = NULL;
         ldapMsg->filterMessage.filterMessage.filterMessageType = PresenceFilter;
         ldapMsg->filterMessage.filterMessage.filterMessage.presenceFilterMessage.lenValue = 0;
@@ -1275,9 +1278,9 @@ int detouredSearchRequestV2(void* pThis, void* thState, void* param1, void* para
 
     int result = realSearchRequestV2(pThis, thState, param1, param2, ldapRequest, param3, ldapMsg, pReferral, pControls, ldapString1, ldapString2, searchLogging, param4, ldapBerval);
     debug_log(getEventAuditMessage(eventParams), debug, traceId);
-
-    if (shouldAuditRequest(searchRequest, blockRequest)) {
-        ldapSearchCalledEvent(eventParams, blockRequest);
+    
+    if (shouldAuditRequest(searchRequest, ruleAction)) {
+        ldapSearchCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;
@@ -1333,17 +1336,17 @@ int detouredCompareRequest(void* pThis, void* thState, void* ldapRequest, LDAPCo
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapCompareEventParameters eventParams = populateCompareEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (!blockRequest) {
+    if (ruleAction.Action == allow) {
         result = realCompareRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2);
     }
 
     debug_log(getEventAuditMessage(eventParams), debug, traceId);
 
-    if (shouldAuditRequest(compareRequest, blockRequest)) {
-        ldapCompareCalledEvent(eventParams, blockRequest);
+    if (shouldAuditRequest(compareRequest, ruleAction)) {
+        ldapCompareCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;
@@ -1390,17 +1393,17 @@ int detouredExtendedRequestV4(void* pThis, void* thState, void* ldapRequest, LDA
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapExtendedEventParameters eventParams = populateExtendedEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (!blockRequest) {
+    if (ruleAction.Action == allow) {
         result = realExtendedRequestV4(pThis, thState, ldapRequest, ldapMsg, pReferral, ldapString1, ldapString2, ldapOid, ldapString3);
     }
 
     debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
 
-    if (shouldAuditRequest(extendedRequest, blockRequest)) {
-        ldapExtendedCalledEvent(eventParams, blockRequest);
+    if (shouldAuditRequest(extendedRequest, ruleAction)) {
+        ldapExtendedCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;
@@ -1413,17 +1416,17 @@ int detouredExtendedRequestV5(void* pThis, void* thState, void* ldapRequest, LDA
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapExtendedEventParameters eventParams = populateExtendedEventParameters(pThis, thState, ldapMsg, traceId);
-    bool blockRequest = shouldBlockRequest(config.Rules, eventParams);
-    eventParams.action = getActionText(blockRequest);
+    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    eventParams.action = getActionText(ruleAction.Action);
 
-    if (!blockRequest) {
+    if (ruleAction.Action == allow) {
         result = realExtendedRequestV5(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2, ldapOid, ldapString3);
     }
 
     debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
 
-    if (shouldAuditRequest(extendedRequest, blockRequest)) {
-        ldapExtendedCalledEvent(eventParams, blockRequest);
+    if (shouldAuditRequest(extendedRequest, ruleAction)) {
+        ldapExtendedCalledEvent(eventParams, ruleAction.Action);
     }
 
     return result;

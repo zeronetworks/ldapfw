@@ -83,6 +83,19 @@ action extractActionFromJsonValue(const Json::Value& jsonValue)
     return Action;
 }
 
+audit extractAuditFromJsonValue(const Json::Value& jsonValue)
+{
+    std::string auditString = jsonValue.get("audit", "off").asString();
+
+    audit Audit = off;
+
+    if (auditString == "on") {
+        Audit = on;
+    }
+
+    return Audit;
+}
+
 const Json::Value parseStringToJson(const std::string& jsonConfig)
 {
     Json::Value root;
@@ -130,6 +143,7 @@ Rule extractRuleFromJsonValue(const Json::Value& ruleJson)
     rule.IPs = extractVectorFromJsonArray(ruleJson, "ips");
     rule.Users = extractVectorFromJsonArray(ruleJson, "users");
     rule.Action = extractActionFromJsonValue(ruleJson);
+    rule.Audit = extractAuditFromJsonValue(ruleJson);
     rule.DN = ruleJson.get("dn", "").asString();
     rule.Attribute = ruleJson.get("attribute", "").asString();
     rule.OID = ruleJson.get("oid", "").asString();
