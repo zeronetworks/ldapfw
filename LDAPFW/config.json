@@ -5,12 +5,14 @@
 			"attributes": ["admincount", "userpassword", "msds-allowedToDelegateTo", "ms-Mcs-AdmPwd"],
 			"audit": "on"
         },
-        {
-            "operations": ["*"],
-            "ips": ["*"],
-            "users": ["*"],
-            "action": "allow"
-        }
-    ],
-	"suppressAudit": ["search"]
+	    {
+            "operations": ["search"],
+			"audit": "off"
+        },
+		{
+			"operations": ["*"],
+			"action":  "allow",
+			"audit": "on",
+		}
+    ]
 }

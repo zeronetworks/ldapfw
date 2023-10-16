@@ -4,8 +4,12 @@
             "operations": ["search"],
             "ips": ["*"],
             "users": ["*"],
-            "attribute": "userpassword",
+            "attributes": ["userpassword"],
             "action": "block"
+        },
+	    {
+            "operations": ["search"],
+			"audit": "off"
         },
         {
             "operations": ["*"],
@@ -13,6 +17,5 @@
             "users": ["*"],
             "action": "allow"
         }
-    ],
-	"suppressAudit": ["search"]
+    ]
 }

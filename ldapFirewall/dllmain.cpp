@@ -595,11 +595,8 @@ bool shouldAuditRequest(ldapOperation op, RuleAction ruleAction)
     else if (ruleAction.Audit == on) {
         return true;
     }
-    else if (std::find(config.suppressAudit.begin(), config.suppressAudit.end(), op) != config.suppressAudit.end()) {
-        return false;
-    }
     else {
-        return true;
+        return false;
     }
 }
 
@@ -1588,7 +1585,6 @@ bool getConfigFromNamedPipe()
     }
     else {
         config.Rules = newConfig.Rules;
-        config.suppressAudit = newConfig.suppressAudit;
         write_log("Updated rules");
         debug_log(jsonConfig, debug);
     }

@@ -62,7 +62,6 @@ struct Config {
     int GetUserSIDFromCurrentTokenOffset;
     logLevel DebugLevel;
     std::string LogPath;
-    std::vector<ldapOperation> suppressAudit;
 };
 
 std::vector<Rule> loadRulesFromJson(const Json::Value);

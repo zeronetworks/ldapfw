@@ -182,7 +182,6 @@ Config loadConfigFromJson(const std::string& jsonConfig)
     config.Rules = loadRulesFromJson(root["rules"]);
     config.DebugLevel = static_cast<logLevel>(getIntFromJsonValue(root["debugLevel"]));
     config.LogPath = getStringFromJsonValue(root["logPath"]);
-    config.suppressAudit = extractOperationFromJsonArray(root["suppressAudit"]);
 
     const Json::Value offsets = root["offsets"];
 
