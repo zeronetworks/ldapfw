@@ -47,6 +47,7 @@ Get the latest binary from the [release page](https://github.com/zeronetworks/ld
 Currently supported and tested on Windows Server 2016 and up.<br>
 Internet access is required for fetching symbols from the [Microsoft public symbol server](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/microsoft-public-symbols).<br>
 
+If you get an error about missing DLLs (VCRUNTIME140.dll / MSVCP140.dll), install the [Microsoft Visual C++ 2015 - 2022 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe).
 ## Usage
 ```
 ldapFwManager.exe /help
