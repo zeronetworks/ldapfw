@@ -190,8 +190,7 @@ bool installFirewall()
 	}
 	else {
 		if (!isLdapFwInstalled()) {
-			hookProcessLoadLibrary(lsassProcessId);
-			return true;
+			return hookProcessLoadLibrary(lsassProcessId);
 		} else {
 			std::cout << "LDAP Firewall already installed." << std::endl;
 		}

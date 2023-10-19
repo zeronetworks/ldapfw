@@ -69,42 +69,44 @@ bool isDllLoaded(DWORD processID, const WCHAR* dllFullPath)
     return false;
 }
 
-void hookProcessLoadLibrary(DWORD processID) 
+bool hookProcessLoadLibrary(DWORD processID) 
 {
 
 	HANDLE hProcess = OpenProcess(MAXIMUM_ALLOWED, false, processID);
 	if (hProcess == nullptr)
 	{
 		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID, GetLastError());
-		return;
+		return false;
 	}
 
 	void* LLParam = (LPVOID)VirtualAllocEx(hProcess, nullptr, sizeof DLL_NAME, MEM_COMMIT, PAGE_READWRITE);
 	if (LLParam == nullptr)
 	{
 		_tprintf(TEXT("Error when calling VirtualAllocEx %d \n"), GetLastError());
-		return;
+		return false;
 	}
 
 	if (WriteProcessMemory(hProcess, LLParam, DLL_NAME, sizeof DLL_NAME, NULL) == 0)
 	{
 		_tprintf(TEXT("Error when calling WriteProcessMemory %d \n"), GetLastError());
-		return;
+		return false;
 	}
 
 	FARPROC pLoadLib = GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "LoadLibraryA");
 	if (pLoadLib == nullptr)
 	{
 		_tprintf(TEXT("Error when calling GetProcAddress %d \n"), GetLastError());
-		return;
+		return false;
 	}
 
 	HANDLE hRemoteThread = CreateRemoteThread(hProcess, nullptr, 0, (LPTHREAD_START_ROUTINE)pLoadLib, LLParam, 0, 0);
 	if (hRemoteThread == nullptr)
 	{
 		_tprintf(TEXT("Error when calling CreateRemoteThread %d \n"), GetLastError());
-		return;
+		return false;
 	}
 
 	CloseHandle(hRemoteThread);
+
+    return true;
 }
