@@ -8,7 +8,11 @@
 Its primary use-cases are to protect Domain Controllers, block LDAP-based attacks and tightly control access to the Active Directory schema (e.g enforcing read-only access for users).<br>
 The tool is written in C++ and makes use of the [Microsoft Detours](https://github.com/microsoft/Detours) and [JsonCpp](https://github.com/open-source-parsers/jsoncpp) packages.
 
-To get started, check out our [blog post](https://zeronetworks.com/blog/ldap-firewall-level-up-your-dc-security/) and [tutorial video](https://www.youtube.com/watch?v=CmV9SDbFW2c).
+Some useful resources to get you started:
+- [Introduction blog post](https://zeronetworks.com/blog/ldap-firewall-level-up-your-dc-security/) - basics of LDAP and overview of the tool   
+- [Technical Deep Dive blog post](https://zeronetworks.com/blog/a-technical-deep-dive-of-ldap-firewall/) - reverse-engineering the Windows LDAP service and how LDAP Firewall works 
+- [Tutorial video](https://www.youtube.com/watch?v=CmV9SDbFW2c) - covers how to install and use the tool
+- [LDAP Firewall Workshop video](https://www.youtube.com/watch?v=XsIzA8yal20) - from DEATHCon 2023
 
 ## Main Features
 - Allow / block incoming LDAP queries based on different parameters (operation type, source IP, user, DN etc.)
