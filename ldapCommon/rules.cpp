@@ -26,6 +26,9 @@ bool isOperationInRule(const Rule &rule, ldapOperation op)
 bool isIPInRule(const Rule& rule, std::string &ip)
 {
     for (std::string ruleIP : rule.IPs) {
+        if ((ruleIP.find('/') != std::string::npos) && isIPInCIDR(ip, ruleIP))
+            return true;
+
         if ((ruleIP == ip) || ruleIP == ANY[0])
             return true;
     }

@@ -111,7 +111,7 @@ All configurations are set in the `config.json` file.
 ## Rules
 The `rules` field specifies a list of block / allow rules similar to a classic firewall. Each rule can be defined with the following fields:
 - <b>operations</b> - list of  LDAP operations (add / delete / modify / modifydn / search / compare / extended or `*` for any)
-- <b>ips</b> - list of source IPs (or `*` for any)
+- <b>ips</b> - list of source IPs / CIDR subnets (or `*` for any)
 - <b>users</b> - list of users (or `*` for any)
 - <b>action</b> - action to perform (allow / block)
 - <b>audit</b> - log operation in the Event Log (on / off)

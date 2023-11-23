@@ -29,6 +29,8 @@ std::string Join(Range const& elements, const char* const delimiter) {
     return os.str();
 }
 
+std::vector<std::string> split(const std::string&, const char*);
+
 std::vector<std::wstring> split(const std::wstring&, const wchar_t*);
 
 std::uint8_t* PatternScan(void*, const char*);
@@ -39,3 +41,7 @@ enum logLevel
     debug = 1,
     verbose = 2
 };
+
+bool isIPInSubnet(const std::string&, const std::string&, uint8_t);
+
+bool isIPInCIDR(const std::string&, const std::string&);
