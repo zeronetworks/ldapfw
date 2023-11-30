@@ -64,6 +64,7 @@ Command:
 /uninstall - remove LDAP Firewall protection
 /update - reload config.json and update the LDAPFW configuration (while installed)
 /status - print status
+/validate - verify that the config.json file is formatted correctly
 /help - show this help message and exit
 
 Debug Options: (use with /install or /status)

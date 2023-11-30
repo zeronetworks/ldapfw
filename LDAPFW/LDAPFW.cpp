@@ -23,7 +23,7 @@
 #include "utils.h"
 #include "rules.h"
 
-#define LDAPFW_VERSION "0.0.3"
+#define LDAPFW_VERSION "0.0.4"
 #define GLOBAL_LDAPFW_EVENT_UNPROTECT TEXT("Global\\LdapFwUninstalledEvent")
 #define LDAPFW_PIPE_NAME TEXT("\\\\.\\Pipe\\LDAPFW")
 #define PIPE_BUFFER_SIZE 1024
@@ -52,7 +52,7 @@ inline const bool const StringToBool(wchar_t* str)
 	return wcscmp(lowerStr, L"true") == 0 ? true : false;
 }
 
-std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/install", "/uninstall", "/update", "/v", "/vv" };
+std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/validate", "/install", "/uninstall", "/update", "/v", "/vv" };
 
 struct compare
 {
@@ -213,6 +213,7 @@ void printHelp()
 	std::cout << "/uninstall - remove LDAP Firewall protection" << std::endl;
 	std::cout << "/update - reload config.json and update the LDAPFW configuration (while installed)" << std::endl;
 	std::cout << "/status - print status" << std::endl;
+	std::cout << "/validate - verify that the config.json file is formatted correctly" << std::endl;
 	std::cout << "/help - show this help message and exit" << std::endl;
 	std::cout << std::endl;
 	std::cout << "Debug Options: (use with /install or /status)" << std::endl;
@@ -354,7 +355,7 @@ void validateJsonOrExit(const std::string& jsonConfig)
 		configBuffer >> root;
 	}
 	catch (Json::RuntimeError& e) {
-		std::cout << "Failed to parse config.json, aborting";
+		std::cout << "Invalid config.json file";
 		exit(-1);
 	}
 }
@@ -585,8 +586,14 @@ int main(int argc, char* argv[])
 	if (argc == 1 || isFlagInArgs(argc, argv, "/help")) {
 		printHelp();
 		return 0;
-	} else if (isFlagInArgs(argc, argv, "/status")) {
+	}
+	else if (isFlagInArgs(argc, argv, "/status")) {
 		printStatus(debugLevel);
+		return 0;
+	} else if (isFlagInArgs(argc, argv, "/validate")) {
+		std::string config = loadConfigFile();
+		validateJsonOrExit(config);
+		std::cout << "Config file is valid";
 		return 0;
 	} else if (isFlagInArgs(argc, argv, "/install")) {
 		std::string config = loadConfigFile();
