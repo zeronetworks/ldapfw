@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include <string>
 #include <format>
-#include <regex>
 #include <json/json.h>
 #include <ldapMessages.h>
 #include "rules.h"
@@ -112,20 +111,10 @@ bool isOidInRule(const Rule& rule, std::string& oid)
 
 bool isFilterInRule(const Rule& rule, const std::string& filter)
 {
-    if (rule.Filter.empty()) {
+    if (rule.Filter.empty())
         return true;
-    } else {
-        std::regex star_replace("\\*");
-        std::regex questionmark_replace("\\?");
 
-        auto wildcard_pattern = regex_replace(
-            regex_replace(rule.Filter, star_replace, ".*"),
-            questionmark_replace, ".");
-
-        std::regex wildcard_regex("^" + wildcard_pattern + "$");
-
-        return regex_match(filter, wildcard_regex);
-    }
+    return rule.Filter == filter;
 }
 
 bool actionToBool(action Action)
