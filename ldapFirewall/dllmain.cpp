@@ -1554,7 +1554,7 @@ bool getConfigFromNamedPipe()
             break;
 
 
-    } while (!fSuccess);
+    } while (cbBytes);
 
     CloseHandle(hPipe);
     
@@ -1563,7 +1563,15 @@ bool getConfigFromNamedPipe()
         return false;
     }
 
-    Config newConfig = loadConfigFromJson(jsonConfig);
+    Config newConfig;
+
+    try {
+        newConfig = loadConfigFromJson(jsonConfig);
+    }
+    catch (Json::RuntimeError& e) {
+        write_log("Config file corrupted, quitting");
+        return false;
+    }
 
     if (newConfig.AddRequestOffset == 0 && (config.AddRequestOffset == 0)) {
         write_log("Config missing offsets, quitting");
