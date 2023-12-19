@@ -47,11 +47,14 @@ Protect LAPS passwords by monitoring and blocking attempts to read the <i>ms-Mcs
 # Getting started
 Get the latest binary from the [release page](https://github.com/zeronetworks/ldapfw/releases), or build from source.
 
-## Prerequisites
+### Prerequisites
 Currently supported and tested on Windows Server 2016 and up.<br>
 Internet access is required for fetching symbols from the [Microsoft public symbol server](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/microsoft-public-symbols).<br>
 
-If you get an error about missing DLLs (VCRUNTIME140.dll / MSVCP140.dll), install the [Microsoft Visual C++ 2015 - 2022 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+### Known Issues
+- If you get an error about missing DLLs (VCRUNTIME140.dll / MSVCP140.dll), install the [Microsoft Visual C++ 2015 - 2022 Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+- If you get an "Error when calling VirtualAllocEx 5" message when installing LDAPFW,  check whether Windows Defender has Attack Surface Reduction enabled (rule GUID [9e6c4e1f-7d60-472f-ba1a-a39ef669e4b2](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/attack-surface-reduction-rules-reference?view=o365-worldwide#asr-rule-to-guid-matrix)). The easiest solution is to add ldapFwManager.exe [as an exclusion](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/enable-attack-surface-reduction?view=o365-worldwide#exclude-files-and-folders-from-attack-surface-reduction-rules).
+
 ## Usage
 ```
 ldapFwManager.exe /help
