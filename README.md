@@ -63,6 +63,8 @@ Usage: ldapFwManager /<Command> [options]
 
 Command:
 ----------
+/service - install LDAP Firewall as a service
+/remove - remove LDAP Firewall service
 /install - install and start LDAP Firewall protection
 /uninstall - remove LDAP Firewall protection
 /update - reload config.json and update the LDAPFW configuration (while installed)

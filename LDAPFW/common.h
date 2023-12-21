@@ -1,7 +1,8 @@
 #pragma once
 #include "stdafx.h"
+#include "utils.h"
 
-#define SERVICE_NAME  _T("RPC Firewall")   
+#define SERVICE_NAME  _T("LDAP Firewall")   
 extern HANDLE globalMappedMemory;
 extern HANDLE globalUnprotectEvent;
 extern bool interactive;
@@ -19,6 +20,30 @@ bool createSecurityAttributes(SECURITY_ATTRIBUTES*, PSECURITY_DESCRIPTOR);
 HANDLE createGlobalEvent(bool, bool, wchar_t*);
 
 void createAllGloblEvents();
+
+void setupNamedPipe();
+
+bool writeToNamedPipe(const std::string);
+
+bool copyDllsToSystemPath();
+
+std::string generateLogPath();
+
+std::string enrichConfig(const std::string&, std::string, logLevel);
+
+std::string loadConfigFile();
+
+void validateJsonOrExit(const std::string&);
+
+void cleanup();
+
+void installFirewall();
+
+void startFirewall(logLevel);
+
+bool stopFirewall();
+
+void uninstallFirewall();
 
 void readConfigAndMapToMemory();
 

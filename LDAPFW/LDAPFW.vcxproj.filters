@@ -30,6 +30,12 @@
     <ClCompile Include="..\jsoncpp\jsoncpp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="service.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EventSink.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Injections.h">
@@ -51,6 +57,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\jsoncpp\json\json-forwards.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="service.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventSink.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

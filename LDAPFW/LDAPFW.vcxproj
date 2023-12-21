@@ -144,16 +144,20 @@
     <ClCompile Include="..\jsoncpp\jsoncpp.cpp" />
     <ClCompile Include="common.cpp" />
     <ClCompile Include="elevation.cpp" />
+    <ClCompile Include="EventSink.cpp" />
     <ClCompile Include="Injections.cpp" />
     <ClCompile Include="LDAPFW.cpp" />
+    <ClCompile Include="service.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\jsoncpp\json\json-forwards.h" />
     <ClInclude Include="..\jsoncpp\json\json.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="elevation.h" />
+    <ClInclude Include="EventSink.h" />
     <ClInclude Include="Injections.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="service.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

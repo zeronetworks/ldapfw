@@ -22,6 +22,7 @@
 #include "config.h"
 #include "utils.h"
 #include "rules.h"
+#include "service.h"
 
 #define LDAPFW_VERSION "0.0.5"
 #define GLOBAL_LDAPFW_EVENT_UNPROTECT TEXT("Global\\LdapFwUninstalledEvent")
@@ -52,7 +53,7 @@ inline const bool const StringToBool(wchar_t* str)
 	return wcscmp(lowerStr, L"true") == 0 ? true : false;
 }
 
-std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/validate", "/install", "/uninstall", "/update", "/v", "/vv" };
+std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/validate", "/service", "/remove", "/install", "/uninstall", "/update", "/v", "/vv" };
 
 struct compare
 {
@@ -182,7 +183,7 @@ bool isLdapFwInstalled()
 	}
 }
 
-bool installFirewall() 
+bool injectFirewall() 
 {
 	auto lsassProcessId = FindProcessId(L"lsass.exe");
 	if (lsassProcessId == 0) {
@@ -199,9 +200,105 @@ bool installFirewall()
 	return false;
 }
 
-void uninstallFirewall() 
+void installFirewall()
 {
+	if (!copyDllsToSystemPath()) {
+		exit(-1);
+	}
+	
+	addEventSource();
+}
+
+void startFirewall(logLevel debugLevel)
+{
+	std::string config = loadConfigFile();
+	validateJsonOrExit(config);
+
+	std::string configWithOffsets = "";
+	std::string logPathBeforeElevation = generateLogPath();
+
+	elevateCurrentProcessToSystem();
+
+	if (isLdapFwInstalled()) {
+		std::cout << "Already installed";
+		exit(0);
+	}
+
+	try {
+		configWithOffsets = enrichConfig(config, logPathBeforeElevation, debugLevel);
+	}
+	catch (LdapFwOffsetException& e) {
+		std::cout << "Failed to load debug symbols, aborting";
+		exit(-1);
+	}
+	catch (Json::RuntimeError& e) {
+		std::cout << "Failed to parse config.json, aborting";
+		exit(-1);
+	}
+
+	std::cout << "Installing LDAP Firewall..." << std::endl;
+
+	createAllGloblEvents();
+
+	setupNamedPipe();
+
+	if (injectFirewall()) {
+		std::cout << "Loading LDAP Firewall configuration..." << std::endl;
+		writeToNamedPipe(configWithOffsets);
+	}
+
+	cleanup();
+}
+
+bool stopFirewall() 
+{
+	elevateCurrentProcessToSystem();
+
+	if (!isLdapFwInstalled()) {
+		std::cout << "LDAPFW not installed" << std::endl;
+		return false;
+	}
+
+	std::cout << "Uninstalling LDAP Firewall..." << std::endl;
+
 	sendSignalToGlobalEvent((wchar_t*)GLOBAL_LDAPFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
+
+	cleanup();
+
+	return true;
+}
+
+void uninstallFirewall()
+{
+	auto lsassProcessId = FindProcessId(L"lsass.exe");
+	if (lsassProcessId == 0) {
+		std::cout << "Error, could not find lsass.exe process";
+	}
+
+	std::cout << "Waiting for DLLs to unload";
+
+	while (isDllLoaded(lsassProcessId, L"c:\\windows\\system32\\ldapfw.dll")) {
+		std::cout << ".";
+		Sleep(1000);
+	}
+
+	std::cout << std::endl;
+
+	deleteFileFromSysfolder(LDAP_FW_DLL_NAME);
+	if (!deleteFileFromSysfolder(LDAP_MESSAGES_DLL_NAME)) {
+		std::cout << "Please make sure the Event Viewer is closed" << std::endl;
+		exit(-1);
+	}
+
+	if (deleteEventSource())
+	{
+		std::cout << "Event Log successfully removed..." << std::endl;
+	}
+	else
+	{
+		std::cout << "deleteEventSource failed: " << GetLastError() << std::endl;
+		exit(-1);
+	}
 }
 
 void printHelp() 
@@ -209,6 +306,8 @@ void printHelp()
 	std::cout << "Usage: ldapFwManager /<Command> [options]" << std::endl << std::endl;
 	std::cout << "Command:" << std::endl;
 	std::cout << "----------" << std::endl;
+	std::cout << "/service - install LDAP Firewall as a service" << std::endl;
+	std::cout << "/remove - remove LDAP Firewall service" << std::endl;
 	std::cout << "/install - install and start LDAP Firewall protection" << std::endl;
 	std::cout << "/uninstall - remove LDAP Firewall protection" << std::endl;
 	std::cout << "/update - reload config.json and update the LDAPFW configuration (while installed)" << std::endl;
@@ -405,10 +504,30 @@ std::string enrichConfig(const std::string& jsonConfig, std::string logPath, log
 	return fastWriter.write(root);
 }
 
+std::string getLocalFilePath(std::string fileName) 
+{
+	char modulePath[MAX_PATH];
+
+	if (!GetModuleFileNameA(nullptr, modulePath, MAX_PATH))
+	{
+		std::cout << "GetModuleFileName failed: " << GetLastError() << std::endl;
+		return "";
+	}
+
+	std::string::size_type pos = std::string(modulePath).find_last_of("\\/");
+
+	if (pos == std::string::npos) {
+		return "";
+	}
+	else {
+		return std::string(modulePath).substr(0, pos) + "\\" + fileName;
+	}
+}
+
 std::string loadConfigFile()
 {
 	std::string line, text;
-	std::ifstream config_doc("config.json", std::ifstream::binary);
+	std::ifstream config_doc(getLocalFilePath("config.json"), std::ifstream::binary);
 	
 	while (std::getline(config_doc, line))
 	{
@@ -437,49 +556,19 @@ void cleanup()
 bool copyDllsToSystemPath()
 {
 	bool success = true;
+	
+	std::wstring ldapFWDllPath = stringToWideString(getLocalFilePath(wideStringToString(LDAP_FW_DLL_NAME)));
+	std::wstring ldapMessagesDllPath = stringToWideString(getLocalFilePath(wideStringToString(LDAP_MESSAGES_DLL_NAME)));
 
-	if (!writeFileToSysfolder(getFullPathOfFile(std::wstring(LDAP_FW_DLL_NAME)), LDAP_FW_DLL_NAME)) {
+	if (!writeFileToSysfolder(ldapFWDllPath, LDAP_FW_DLL_NAME)) {
 		success = false;
 	}
 	
-	if (!writeFileToSysfolder(getFullPathOfFile(std::wstring(LDAP_MESSAGES_DLL_NAME)), LDAP_MESSAGES_DLL_NAME)) {
+	if (!writeFileToSysfolder(ldapMessagesDllPath, LDAP_MESSAGES_DLL_NAME)) {
 		success = false;
 	}
 
 	return success;
-}
-
-void removeDlls()
-{
-	auto lsassProcessId = FindProcessId(L"lsass.exe");
-	if (lsassProcessId == 0) {
-		std::cout << "Error, could not find lsass.exe process";
-	}
-
-	std::cout << "Waiting for DLLs to unload";
-
-	while (isDllLoaded(lsassProcessId, L"c:\\windows\\system32\\ldapfw.dll")) {
-		std::cout << ".";
-		Sleep(1000);
-	}
-
-	std::cout << std::endl;
-
-	deleteFileFromSysfolder(LDAP_FW_DLL_NAME);
-	if (!deleteFileFromSysfolder(LDAP_MESSAGES_DLL_NAME)) {
-		std::cout << "Please make sure the Event Viewer is closed" << std::endl;
-		exit(-1);
-	}
-
-	if (deleteEventSource())
-	{
-		std::cout << "Event Log successfully removed..." << std::endl;
-	}
-	else
-	{
-		std::cout << "deleteEventSource failed: " << GetLastError() << std::endl;
-		exit(-1);
-	}
 }
 
 bool isFlagInArgs(int argc, char* argv[], std::string flag)
@@ -577,6 +666,10 @@ bool verifyArguments(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+	interactive = !setupService();
+	
+	if (!interactive) return 0;
+
 	if (!verifyArguments(argc, argv)) {
 		return -1;
 	}
@@ -595,58 +688,21 @@ int main(int argc, char* argv[])
 		validateJsonOrExit(config);
 		std::cout << "Config file is valid";
 		return 0;
-	} else if (isFlagInArgs(argc, argv, "/install")) {
-		std::string config = loadConfigFile();
-		validateJsonOrExit(config);
-
-		std::string configWithOffsets = "";
-		std::string logPathBeforeElevation = generateLogPath();
-
+	} else if (isFlagInArgs(argc, argv, "/service")) {
+		installFirewall();
+		serviceInstall(SERVICE_DEMAND_START);
+		serviceStart();
+		serviceMakeAutostart();
+	} else if (isFlagInArgs(argc, argv, "/remove")) {
+		serviceStop();
 		elevateCurrentProcessToSystem();
-
-		if (isLdapFwInstalled()) {
-			std::cout << "Already installed";
-			return 0;
-		}
-
-		try {
-			configWithOffsets = enrichConfig(config, logPathBeforeElevation, debugLevel);
-		} catch (LdapFwOffsetException& e) {
-			std::cout << "Failed to load debug symbols, aborting";
-			exit(-1);
-		}
-		catch (Json::RuntimeError& e) {
-			std::cout << "Failed to parse config.json, aborting";
-			exit(-1);
-		}
-
-		if (!copyDllsToSystemPath()) {
-			return -1;
-		}
-
-		addEventSource();
-		std::cout << "Installing LDAP Firewall..." << std::endl;
-		createAllGloblEvents();
-		setupNamedPipe();
-		if (installFirewall()) {
-			std::cout << "Loading LDAP Firewall configuration..." << std::endl;
-			writeToNamedPipe(configWithOffsets);
-		}
-		cleanup();
-	} else if (isFlagInArgs(argc, argv, "/uninstall")) {
-		elevateCurrentProcessToSystem();
-
-		if (!isLdapFwInstalled()) {
-			std::cout << "LDAPFW not installed";
-			return 0;
-		}
-
-		std::cout << "Uninstalling LDAP Firewall..." << std::endl;
-
 		uninstallFirewall();
-		cleanup();
-		removeDlls();
-		
+		serviceUninstall();
+	} else if (isFlagInArgs(argc, argv, "/install")) {
+		installFirewall();
+		startFirewall(debugLevel);
+	} else if (isFlagInArgs(argc, argv, "/uninstall")) {
+		if (stopFirewall()) uninstallFirewall();
 	} else if (isFlagInArgs(argc, argv, "/update")) {
 		elevateCurrentProcessToSystem();
 
