@@ -110,3 +110,33 @@ bool hookProcessLoadLibrary(DWORD processID)
 
     return true;
 }
+
+bool isProcessProtected(const std::wstring& processName)
+{
+	bool isProtected = true;
+
+	auto processId = FindProcessId(processName);
+	if (processId == 0) {
+		_tprintf(TEXT("Error when calling FindProcessId %d \n"), GetLastError());
+		return isProtected;
+	}
+
+	HANDLE pHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
+
+	if (pHandle != nullptr)
+	{
+		PROCESS_PROTECTION_LEVEL_INFORMATION ppli;
+		if (GetProcessInformation(pHandle, ProcessProtectionLevelInfo, &ppli, sizeof(PROCESS_PROTECTION_LEVEL_INFORMATION)))
+		{
+			if (ppli.ProtectionLevel == PROTECTION_LEVEL_NONE)
+			{
+				isProtected = false;
+			}
+
+		}
+
+		CloseHandle(pHandle);
+	}
+
+	return isProtected;
+}

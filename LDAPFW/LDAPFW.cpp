@@ -202,6 +202,11 @@ bool injectFirewall()
 
 void installFirewall()
 {
+	if (isProcessProtected(L"lsass.exe")) {
+		std::cout << "LSA protection is enabled, cannot proceed." << std::endl;
+		exit(-1);
+	}
+
 	if (!copyDllsToSystemPath()) {
 		exit(-1);
 	}
