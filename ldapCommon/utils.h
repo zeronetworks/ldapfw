@@ -3,6 +3,8 @@ const char* const BoolToString(bool b);
 
 std::string StringToLower(std::string);
 
+std::wstring StringToLower(std::wstring);
+
 bool isStringInVector(const std::string*, const std::vector<std::string>&);
 
 std::string wideStringToString(const std::wstring&);

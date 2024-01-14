@@ -23,6 +23,15 @@ std::string StringToLower(std::string str)
 	return lowerStr;
 }
 
+std::wstring StringToLower(std::wstring str)
+{
+    std::wstring lowerStr = str;
+
+    std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(), ::tolower);
+
+    return lowerStr;
+}
+
 bool isStringInVector(const std::string* s, const std::vector<std::string>& v)
 {
 	return any_of(v.begin(), v.end(), [&](const std::string& elem) { return elem == (*s); });

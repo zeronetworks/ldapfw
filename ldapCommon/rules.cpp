@@ -88,7 +88,7 @@ bool isAttributeInRule(const Rule& rule, const std::vector<std::wstring>& entryL
         std::wstring attribute = entry.substr(0, pos);
 
         for (std::string ruleAttribute : rule.Attributes) {
-            if (stringToWideString(ruleAttribute) == attribute)
+            if (StringToLower(stringToWideString(ruleAttribute)) == StringToLower(attribute))
                 return true;
         }
     }
