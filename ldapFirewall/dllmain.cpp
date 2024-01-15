@@ -1595,6 +1595,7 @@ bool getConfigFromNamedPipe()
         config.Rules = newConfig.Rules;
         write_log("Updated rules");
         debug_log(jsonConfig, debug);
+        ldapConfigUpdateEvent();
     }
 
     return true;

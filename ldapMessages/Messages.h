@@ -198,3 +198,12 @@
 //
 #define LDAP_EXTENDED_CALL               ((DWORD)0x60020109L)
 
+//
+// MessageId: LDAP_CONFIG_UPDATED
+//
+// MessageText:
+//
+// LDAP Firewall configuration updated.
+//
+#define LDAP_CONFIG_UPDATED              ((DWORD)0x6002010AL)
+

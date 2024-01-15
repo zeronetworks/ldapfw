@@ -99,6 +99,8 @@ DllExport bool ldapProtectedEvent();
 
 DllExport bool ldapUnprotectedEvent();
 
+DllExport bool ldapConfigUpdateEvent();
+
 DllExport bool ldapAddCalledEvent(const LdapAddEventParameters&, bool blockRequest);
 
 DllExport bool ldapDelCalledEvent(const LdapDelEventParameters&, bool blockRequest);

@@ -144,3 +144,11 @@ SymbolicName    = LDAP_EXTENDED_CALL
 Language        = English
 An LDAP Extended operation was called.%n%nOperation Information:%n%tSecurity ID:%t%t%1%n%tAction:%t%t%t%2%n%tOid:%t%t%t%3%n%tData:%t%t%t%4%n%nNetwork Information:%n%tClient Network Address:%t%5%n%tClient Port:%t%t%6
 .
+
+MessageId       = 0x10a
+Severity        = Informational
+Facility        = Runtime
+SymbolicName    = LDAP_CONFIG_UPDATED
+Language        = English
+LDAP Firewall configuration updated.
+.

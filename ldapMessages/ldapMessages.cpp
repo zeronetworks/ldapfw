@@ -306,6 +306,34 @@ bool ldapUnprotectedEvent() {
     return bSuccess;
 }
 
+bool ldapConfigUpdateEvent() {
+
+    bool bSuccess = false;
+    WORD eventType = EVENTLOG_AUDIT_SUCCESS;
+
+    // Open the eventlog
+    HANDLE hEventLog = RegisterEventSource(nullptr, PROVIDER_NAME);
+
+    if (hEventLog) {
+
+        bSuccess = ReportEvent(
+            hEventLog,
+            eventType,
+            LDAPFW_AUDIT,
+            LDAP_CONFIG_UPDATED,
+            nullptr,
+            0,
+            0,
+            NULL,
+            nullptr
+        );
+    }
+
+    // Close eventlog
+    DeregisterEventSource(hEventLog);
+    return bSuccess;
+}
+
 std::wstring escapeIpv6Address(const std::wstring& sourceAddress)
 {
     std::wstring sourceAddressEscaped = sourceAddress;
