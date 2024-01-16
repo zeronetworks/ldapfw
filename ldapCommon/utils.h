@@ -47,3 +47,5 @@ enum logLevel
 bool isIPInSubnet(const std::string&, const std::string&, uint8_t);
 
 bool isIPInCIDR(const std::string&, const std::string&);
+
+bool isRunningAsAdmin();

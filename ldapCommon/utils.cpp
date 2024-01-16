@@ -120,3 +120,24 @@ bool isIPInCIDR(const std::string& ipAddress, const std::string& network)
 
     return isIPInSubnet(ipAddress, networkAndSubnet[0], stoi(networkAndSubnet[1]));
 }
+
+bool isRunningAsAdmin()
+{
+    bool isElevated = false;
+    HANDLE hToken = NULL;
+
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+        TOKEN_ELEVATION Elevation;
+        DWORD cbSize = sizeof(TOKEN_ELEVATION);
+
+        if (GetTokenInformation(hToken, TokenElevation, &Elevation, sizeof(Elevation), &cbSize)) {
+            isElevated = Elevation.TokenIsElevated;
+        }
+    }
+
+    if (hToken) {
+        CloseHandle(hToken);
+    }
+
+    return isElevated;
+}

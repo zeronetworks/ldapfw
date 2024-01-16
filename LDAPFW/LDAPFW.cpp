@@ -684,14 +684,20 @@ int main(int argc, char* argv[])
 	if (argc == 1 || isFlagInArgs(argc, argv, "/help")) {
 		printHelp();
 		return 0;
-	}
-	else if (isFlagInArgs(argc, argv, "/status")) {
-		printStatus(debugLevel);
-		return 0;
 	} else if (isFlagInArgs(argc, argv, "/validate")) {
 		std::string config = loadConfigFile();
 		validateJsonOrExit(config);
 		std::cout << "Config file is valid";
+		return 0;
+	}
+
+	if (!isRunningAsAdmin()) {
+		std::cout << "Please run LDAPFW as administrator." << std::endl;
+		exit(-1);
+	}
+
+	if (isFlagInArgs(argc, argv, "/status")) {
+		printStatus(debugLevel);
 		return 0;
 	} else if (isFlagInArgs(argc, argv, "/service")) {
 		installFirewall();
