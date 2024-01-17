@@ -340,32 +340,20 @@ void write_log(string message)
     fflush(file);
 }
 
-void debug_log(string message, logLevel levelOfLog)
+void debug_log(string message)
 {
-    if (config.DebugLevel < levelOfLog) return;
-
-    if (config.DebugLevel == verbose) {
+    if (config.DebugLogging) 
         write_log(std::format("<{} bytes> {}", getCurrentProcessMemory(), message));
-    }
-    else if (config.DebugLevel == debug) {
-        write_log(message);
-    }
 }
 
-void debug_log(string message, logLevel levelOfLog, string traceId)
+void debug_log(string message, string traceId)
 {
-    if (config.DebugLevel < levelOfLog) return;
-
-    if (config.DebugLevel == verbose) {
+    if (config.DebugLogging)
         write_log(std::format("({}) <{} bytes> {}", traceId, getCurrentProcessMemory(), message));
-    }
-    else if (config.DebugLevel == debug) {
-        write_log(std::format("({}) {}", traceId, message).c_str());
-    }
 }
 
 void initialize_logger() {
-    if (!config.LogPath.empty() && config.DebugLevel > info) {
+    if (!config.LogPath.empty() && config.DebugLogging && file == NULL) {
         file = _fsopen(config.LogPath.c_str(), "a+, ccs=UTF-8", _SH_DENYNO);
         write_log("Installing LDAPFW...");
     }
@@ -379,23 +367,23 @@ void close_logger() {
 
 void writeOffsetsToLog()
 {
-    debug_log(std::format("AddRequest Offset: {}", config.AddRequestOffset), debug);
-    debug_log(std::format("DelRequestOffset Offset: {}", config.DelRequestOffset), debug);
-    debug_log(std::format("ModifyRequest Offset: {}", config.ModifyRequestOffset), debug);
-    debug_log(std::format("ModifyDNRequest Offset: {}", config.ModifyDNRequestOffset), debug);
-    debug_log(std::format("SearchRequest Offset: {}", config.SearchRequestOffset), debug);
-    debug_log(std::format("CompareRequest Offset: {}", config.CompareRequestOffset), debug);
-    debug_log(std::format("ExtendedRequest Offset: {}", config.ExtendedRequestOffset), debug);
-    debug_log(std::format("Init Offset: {}", config.InitOffset), debug);
-    debug_log(std::format("Cleanup Offset: {}", config.CleanupOffset), debug);
-    debug_log(std::format("SetSecurityContextAtts Offset: {}", config.SetSecurityContextAttsOffset), debug);
-    debug_log(std::format("GetUserNameA Offset: {}", config.GetUserNameAOffset), debug);
-    debug_log(std::format("GetUserSIDFromCurrentToken Offset: {}", config.GetUserSIDFromCurrentTokenOffset), debug);
+    debug_log(std::format("AddRequest Offset: {}", config.AddRequestOffset));
+    debug_log(std::format("DelRequestOffset Offset: {}", config.DelRequestOffset));
+    debug_log(std::format("ModifyRequest Offset: {}", config.ModifyRequestOffset));
+    debug_log(std::format("ModifyDNRequest Offset: {}", config.ModifyDNRequestOffset));
+    debug_log(std::format("SearchRequest Offset: {}", config.SearchRequestOffset));
+    debug_log(std::format("CompareRequest Offset: {}", config.CompareRequestOffset));
+    debug_log(std::format("ExtendedRequest Offset: {}", config.ExtendedRequestOffset));
+    debug_log(std::format("Init Offset: {}", config.InitOffset));
+    debug_log(std::format("Cleanup Offset: {}", config.CleanupOffset));
+    debug_log(std::format("SetSecurityContextAtts Offset: {}", config.SetSecurityContextAttsOffset));
+    debug_log(std::format("GetUserNameA Offset: {}", config.GetUserNameAOffset));
+    debug_log(std::format("GetUserSIDFromCurrentToken Offset: {}", config.GetUserSIDFromCurrentTokenOffset));
 }
 
 void addToSocketMapping(void* ldapConn, const std::string& socketInfo, std::string traceId)
 {
-    debug_log(std::format("Adding {} to socket mapping", socketInfo), verbose, traceId);
+    debug_log(std::format("Adding {} to socket mapping", socketInfo), traceId);
     std::uintptr_t pointerAddress = reinterpret_cast<std::uintptr_t>(ldapConn);
     
     {
@@ -403,12 +391,12 @@ void addToSocketMapping(void* ldapConn, const std::string& socketInfo, std::stri
         ldapConnToSocketMap->emplace(pointerAddress, socketInfo);
     }
 
-    debug_log(std::format("Added {} to socket mapping", socketInfo), verbose, traceId);
+    debug_log(std::format("Added {} to socket mapping", socketInfo), traceId);
 }
 
 std::string getSocketInfoFromLdapConn(void* ldapConn, std::string traceId)
 {
-    debug_log("Getting from socket mapping", verbose, traceId);
+    debug_log("Getting from socket mapping", traceId);
     std::uintptr_t pointerAddress = reinterpret_cast<std::uintptr_t>(ldapConn);
     std::string socketInfo = unknownStr;
 
@@ -419,13 +407,13 @@ std::string getSocketInfoFromLdapConn(void* ldapConn, std::string traceId)
         }
     }
 
-    debug_log(std::format("Returning socket {} from mapping", socketInfo), verbose, traceId);
+    debug_log(std::format("Returning socket {} from mapping", socketInfo), traceId);
     return socketInfo;
 }
 
 void removeSocketFromMapping(void* ldapConn, std::string traceId)
 {
-    debug_log("Removing from socket mapping", verbose, traceId);
+    debug_log("Removing from socket mapping", traceId);
     std::uintptr_t pointerAddress = reinterpret_cast<std::uintptr_t>(ldapConn);
 
     {
@@ -433,7 +421,7 @@ void removeSocketFromMapping(void* ldapConn, std::string traceId)
         ldapConnToSocketMap->erase(pointerAddress);
     }
 
-    debug_log("Removed socket", verbose, traceId);
+    debug_log("Removed socket", traceId);
 }
 
 wstring getAccountFromSid(PSID pSid, string traceId) {
@@ -445,11 +433,11 @@ wstring getAccountFromSid(PSID pSid, string traceId) {
     if (LookupAccountSidW(NULL, pSid, userName, &dwSize, &domain[0], &dwSize, &nameUse)) {
         wstring userNameW = wstring(userName);
         wstring domainW = wstring(domain);
-        debug_log(convertWideStringToUTF8(std::format(L"Parsed account from SID: {}\\{}", domainW, userNameW)), verbose, traceId);
+        debug_log(convertWideStringToUTF8(std::format(L"Parsed account from SID: {}\\{}", domainW, userNameW)), traceId);
         return domainW + L"\\" + userNameW;
     }
     else {
-        debug_log("Unable to find account from sid", verbose, traceId);
+        debug_log("Unable to find account from sid", traceId);
         return EMPTY_WSTRING;
     }
 }
@@ -459,26 +447,26 @@ wstring getAccountOrSidFromTHState(void* thState, string traceId) {
     ULONG getSidResult = realGetUserSIDFromCurrentToken(thState, &pSid);
 
     if (getSidResult != 0) {
-        debug_log("Unable to get user SID", verbose, traceId);
+        debug_log("Unable to get user SID", traceId);
         return EMPTY_WSTRING;
     }
 
     wstring account = getAccountFromSid(pSid, traceId);
     if (!account.empty()) {
-        debug_log(std::format("Found user from SID: {}", convertWideStringToUTF8(account)), verbose, traceId);
+        debug_log(std::format("Found user from SID: {}", convertWideStringToUTF8(account)), traceId);
         return account;
     }
 
     wchar_t* stringSid;
     ConvertSidToStringSidW(pSid, &stringSid);
     wstring sidStr = wstring(stringSid);
-    debug_log(std::format("Parsed SID: {}", convertWideStringToUTF8(sidStr)), verbose, traceId);
+    debug_log(std::format("Parsed SID: {}", convertWideStringToUTF8(sidStr)), traceId);
     return sidStr;
 }
 
 void addToUserMapping(void* ldapConn, const std::string& userName, std::string traceId, bool overwrite=false)
 {
-    debug_log(std::format("Adding {} to user mapping", userName), verbose, traceId);
+    debug_log(std::format("Adding {} to user mapping", userName), traceId);
     std::uintptr_t pointerAddress = reinterpret_cast<std::uintptr_t>(ldapConn);
 
     {
@@ -490,12 +478,12 @@ void addToUserMapping(void* ldapConn, const std::string& userName, std::string t
         }
     }
 
-    debug_log(std::format("Added {} to user mapping", userName), verbose, traceId);
+    debug_log(std::format("Added {} to user mapping", userName), traceId);
 }
 
 std::string getUserFromLdapConn(void* ldapConn, void* thState, std::string traceId)
 {
-    debug_log("Getting from user mapping", verbose, traceId);
+    debug_log("Getting from user mapping", traceId);
     std::uintptr_t pointerAddress = reinterpret_cast<std::uintptr_t>(ldapConn);
     std::string user = unknownStr;
 
@@ -505,7 +493,7 @@ std::string getUserFromLdapConn(void* ldapConn, void* thState, std::string trace
             user = ldapConnToUserMap->at(pointerAddress);
         }
         else {
-            debug_log("Unknown user, attempting to resolve from SID", verbose, traceId);
+            debug_log("Unknown user, attempting to resolve from SID", traceId);
             wstring account = getAccountOrSidFromTHState(thState, traceId);
             if (!account.empty()) {
                 user = convertWideStringToUTF8(account);
@@ -514,13 +502,13 @@ std::string getUserFromLdapConn(void* ldapConn, void* thState, std::string trace
         }
     }
 
-    debug_log(std::format("Returning user {} from mapping", user), verbose, traceId);
+    debug_log(std::format("Returning user {} from mapping", user), traceId);
     return user;
 }
 
 void removeUserFromMapping(void* ldapConn, std::string traceId)
 {
-    debug_log("Removing from user mapping", verbose, traceId);
+    debug_log("Removing from user mapping", traceId);
     std::uintptr_t pointerAddress = reinterpret_cast<std::uintptr_t>(ldapConn);
 
     {
@@ -528,7 +516,7 @@ void removeUserFromMapping(void* ldapConn, std::string traceId)
         ldapConnToUserMap->erase(pointerAddress);
     }
 
-    debug_log("Removed user", verbose, traceId);
+    debug_log("Removed user", traceId);
 }
 
 struct AutoUnloader
@@ -621,7 +609,7 @@ LdapAddEventParameters populateAddEventParameters(void* ldapConn, void* thState,
     }
     else {
         string dn(ldapMsg->pMessage, ldapMsg->lenMessage);
-        debug_log(std::format("AddRequest DN: {}", dn), verbose, traceId);
+        debug_log(std::format("AddRequest DN: {}", dn), traceId);
         eventParams.dn = convertUTF8ToWideString(dn);
     }
 
@@ -631,13 +619,13 @@ LdapAddEventParameters populateAddEventParameters(void* ldapConn, void* thState,
 
     AddAttribute* addAttribute = ldapMsg->pAttribute;
     string attributeStr(addAttribute->pAttribute, addAttribute->lenAttribute);
-    debug_log(std::format("AddRequest Attribute: {}", attributeStr), verbose, traceId);
+    debug_log(std::format("AddRequest Attribute: {}", attributeStr), traceId);
     std::string entryList = attributeStr + ":";
 
     if (addAttribute->pAddValue != NULL) {
         AddValue* addValue = addAttribute->pAddValue;
         string valueStr(addValue->pValue, addValue->lenValue);
-        debug_log(std::format("AddRequest Value: {}", valueStr), verbose, traceId);
+        debug_log(std::format("AddRequest Value: {}", valueStr), traceId);
         entryList += valueStr;
     }
 
@@ -648,7 +636,7 @@ LdapAddEventParameters populateAddEventParameters(void* ldapConn, void* thState,
         std::string nextEntryList = "";
         if (pNext->pAttribute != NULL) {
             string nextAttributeString(pNext->pAttribute, pNext->lenAttribute);
-            debug_log(std::format("AddRequest nextAttribute: {}", nextAttributeString), verbose, traceId);
+            debug_log(std::format("AddRequest nextAttribute: {}", nextAttributeString), traceId);
             nextEntryList += nextAttributeString;
         }
 
@@ -656,7 +644,7 @@ LdapAddEventParameters populateAddEventParameters(void* ldapConn, void* thState,
         if (pNext->pAddValue != NULL) {
             AddValue* nextAddValue = pNext->pAddValue;
             string nextValueStr(nextAddValue->pValue, nextAddValue->lenValue);
-            debug_log(std::format("AddRequest nextValue: {}", nextValueStr), verbose, traceId);
+            debug_log(std::format("AddRequest nextValue: {}", nextValueStr), traceId);
             nextEntryList += nextValueStr;
         }
 
@@ -670,7 +658,7 @@ LdapAddEventParameters populateAddEventParameters(void* ldapConn, void* thState,
 int detouredAddRequest(void* pThis, void* thState, void* ldapRequest, LDAPAddMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received AddRequest message", debug, traceId);
+    debug_log("Received AddRequest message", traceId);
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapAddEventParameters eventParams = populateAddEventParameters(pThis, thState, ldapMsg, traceId);
@@ -681,7 +669,7 @@ int detouredAddRequest(void* pThis, void* thState, void* ldapRequest, LDAPAddMes
         result = realAddRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2);
     }
 
-    debug_log(getEventAuditMessage(eventParams), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams), traceId);
 
     if (shouldAuditRequest(addRequest, ruleAction)) {
         ldapAddCalledEvent(eventParams, ruleAction.Action);
@@ -705,7 +693,7 @@ LdapDelEventParameters populateDelEventParameters(void* ldapConn, void* thState,
 
     if (ldapMsg->pMessage != NULL) {
         string dn(ldapMsg->pMessage, ldapMsg->lenMessage);
-        debug_log(std::format("DelRequest DN: {}", dn), verbose, traceId);
+        debug_log(std::format("DelRequest DN: {}", dn), traceId);
         eventParams.dn = convertUTF8ToWideString(dn);
     } else {
         eventParams.dn = std::wstring();
@@ -717,7 +705,7 @@ LdapDelEventParameters populateDelEventParameters(void* ldapConn, void* thState,
 int detouredDelRequest(void* pThis, void* thState, void* ldapRequest, LDAPMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2, int param8)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received DelRequest message", debug, traceId);
+    debug_log("Received DelRequest message", traceId);
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapDelEventParameters eventParams = populateDelEventParameters(pThis, thState, ldapMsg, traceId);
@@ -728,7 +716,7 @@ int detouredDelRequest(void* pThis, void* thState, void* ldapRequest, LDAPMessag
         result = realDelRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2, param8);
     }
 
-    debug_log(getEventAuditMessage(eventParams), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams), traceId);
 
     if (shouldAuditRequest(deleteRequest, ruleAction)) {
         ldapDelCalledEvent(eventParams, ruleAction.Action);
@@ -758,7 +746,7 @@ LdapModifyEventParameters populateModifyEventParameters(void* ldapConn, void* th
     }
     else {
         string dn(ldapMsg->pMessage, ldapMsg->lenMessage);
-        debug_log(std::format("ModifyRequest DN: {}", dn), verbose, traceId);
+        debug_log(std::format("ModifyRequest DN: {}", dn), traceId);
         eventParams.dn = convertUTF8ToWideString(dn);
     }
 
@@ -768,13 +756,13 @@ LdapModifyEventParameters populateModifyEventParameters(void* ldapConn, void* th
 
     Attribute* modifyAttribute = ldapMsg->pAttribute;
     string attributeStr(modifyAttribute->pAttribute, modifyAttribute->lenAttribute);
-    debug_log(std::format("ModifyRequest Attribute: {}", attributeStr), verbose, traceId);
+    debug_log(std::format("ModifyRequest Attribute: {}", attributeStr), traceId);
     std::string entryList = attributeStr + ":";
 
     if (modifyAttribute->pModifyValue != NULL) {
         ModifyValue* modifyValue = modifyAttribute->pModifyValue;
         string valueStr(modifyValue->pValue, modifyValue->lenValue);
-        debug_log(std::format("ModifyRequest Value: {}", valueStr), verbose, traceId);
+        debug_log(std::format("ModifyRequest Value: {}", valueStr), traceId);
         entryList += valueStr;
     }
 
@@ -785,7 +773,7 @@ LdapModifyEventParameters populateModifyEventParameters(void* ldapConn, void* th
         std::string nextEntryList = "";
         if (pNext->pAttribute != NULL) {
             string nextAttributeString(pNext->pAttribute, pNext->lenAttribute);
-            debug_log(std::format("ModifyRequest nextAttribute: {}", nextAttributeString), verbose, traceId);
+            debug_log(std::format("ModifyRequest nextAttribute: {}", nextAttributeString), traceId);
             nextEntryList += nextAttributeString;
         }
 
@@ -793,7 +781,7 @@ LdapModifyEventParameters populateModifyEventParameters(void* ldapConn, void* th
         if (pNext->pModifyValue != NULL) {
             ModifyValue* nextModifyValue = pNext->pModifyValue;
             string nextValueStr(nextModifyValue->pValue, nextModifyValue->lenValue);
-            debug_log(std::format("ModifyRequest nextValue: {}", nextValueStr), verbose, traceId);
+            debug_log(std::format("ModifyRequest nextValue: {}", nextValueStr), traceId);
             nextEntryList += nextValueStr;
         }
 
@@ -807,7 +795,7 @@ LdapModifyEventParameters populateModifyEventParameters(void* ldapConn, void* th
 int detouredModifyRequest(void* pThis, void* thState, void* ldapRequest, LDAPMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2)
 {   
     std::string traceId = generateTraceID();
-    debug_log("Received ModifyRequest message", debug, traceId);
+    debug_log("Received ModifyRequest message", traceId);
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapModifyEventParameters eventParams = populateModifyEventParameters(pThis, thState, ldapMsg, traceId);
@@ -818,7 +806,7 @@ int detouredModifyRequest(void* pThis, void* thState, void* ldapRequest, LDAPMes
         result = realModifyRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2);
     }
 
-    debug_log(getEventAuditMessage(eventParams), verbose, traceId);
+    debug_log(getEventAuditMessage(eventParams), traceId);
     
 
     if (shouldAuditRequest(modifyRequest, ruleAction)) {
@@ -842,15 +830,15 @@ LdapModifyDNEventParameters populateModifyDNEventParameters(void* ldapConn, void
     eventParams.sourcePort = std::wstring(port.begin(), port.end());
 
     string oldDN(ldapMsg->pOldDn, ldapMsg->lenOldDN);
-    debug_log(std::format("ModifyDNRequest Old DN: {}", oldDN), verbose, traceId);
+    debug_log(std::format("ModifyDNRequest Old DN: {}", oldDN), traceId);
     eventParams.oldDn = convertUTF8ToWideString(oldDN);
 
     string newDN(ldapMsg->pNewDn, ldapMsg->lenNewDN);
-    debug_log(std::format("ModifyDNRequest New DN: {}", newDN), verbose, traceId);
+    debug_log(std::format("ModifyDNRequest New DN: {}", newDN), traceId);
     eventParams.newDn = convertUTF8ToWideString(newDN);
 
     string deleteOld = BoolToString(ldapMsg->deleteOld);
-    debug_log(std::format("ModifyDNRequest Delete Old: {}", deleteOld), verbose, traceId);
+    debug_log(std::format("ModifyDNRequest Delete Old: {}", deleteOld), traceId);
     eventParams.deleteOld = convertUTF8ToWideString(deleteOld);
 
     return eventParams;
@@ -859,7 +847,7 @@ LdapModifyDNEventParameters populateModifyDNEventParameters(void* ldapConn, void
 int detouredModifyDNRequest(void* pThis, void* thState, void* ldapRequest, ModifyDNMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2, int param8)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received ModifyDNRequest message", debug, traceId);
+    debug_log("Received ModifyDNRequest message", traceId);
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapModifyDNEventParameters eventParams = populateModifyDNEventParameters(pThis, thState, ldapMsg, traceId);
@@ -870,7 +858,7 @@ int detouredModifyDNRequest(void* pThis, void* thState, void* ldapRequest, Modif
         result = realModifyDNRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2, param8);
     }
 
-    debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams).c_str(), traceId);
 
     if (shouldAuditRequest(modifyDNRequest, ruleAction)) {
         ldapModifyDNCalledEvent(eventParams, ruleAction.Action);
@@ -1061,7 +1049,7 @@ std::string parseExtensibleFilter(const ExtensibleFilterMessage& extensibleFilte
 
     if (extensibleFilterMessage.pAttribute) {
         string attribute = string(extensibleFilterMessage.pAttribute, extensibleFilterMessage.lenAttribute);
-        debug_log(std::format("Attribute: {}", attribute), verbose, traceId);
+        debug_log(std::format("Attribute: {}", attribute), traceId);
         filterStr += attribute;
     }
 
@@ -1069,13 +1057,13 @@ std::string parseExtensibleFilter(const ExtensibleFilterMessage& extensibleFilte
 
     if (extensibleFilterMessage.pMatchingRuleOID) {
         string ruleOid = string(extensibleFilterMessage.pMatchingRuleOID, extensibleFilterMessage.lenMatchingRuleOID);
-        debug_log(std::format("Matching Rule OID: {}", ruleOid), verbose, traceId);
+        debug_log(std::format("Matching Rule OID: {}", ruleOid), traceId);
         filterStr += ruleOid + ":";
     }
 
     if (extensibleFilterMessage.pValue) {
         string value = string(extensibleFilterMessage.pValue, extensibleFilterMessage.lenValue);
-        debug_log(std::format("Value: {}", value), verbose, traceId);
+        debug_log(std::format("Value: {}", value), traceId);
         filterStr += "=" + value;
     }
 
@@ -1089,72 +1077,72 @@ std::string parseSingleFilter(const SingleFilterMessage& filterMessage, std::str
     switch (filterMessage.filterMessageType) {
     case AndFilter:
     {
-        debug_log("AND filter", verbose, traceId);
+        debug_log("AND filter", traceId);
         filterStr += parseAndFilter(filterMessage.filterMessage.andFilterMessage, traceId);
     }
 
     break;
     case OrFilter:
     {
-        debug_log("OR filter", verbose, traceId);
+        debug_log("OR filter", traceId);
         filterStr += parseOrFilter(filterMessage.filterMessage.orFilterMessage, traceId);
     }
     break;
     case NotFilter:
     {
-        debug_log("NOT filter", verbose, traceId);
+        debug_log("NOT filter", traceId);
         filterStr += parseNotFilter(filterMessage.filterMessage.notFilterMessage, traceId);
     }
     break;
     case EqualityFilter:
     {
-        debug_log("Equality filter", verbose, traceId);
+        debug_log("Equality filter", traceId);
         filterStr += parseEqualityFilter(filterMessage.filterMessage.equalityFilterMessage, traceId);
     }
     break;
     case SubstringFilter:
     {
-        debug_log("Substring filter", verbose, traceId);
+        debug_log("Substring filter", traceId);
         filterStr += parseSubstringFilter(filterMessage.filterMessage.substringFilterMessage, traceId);
     }
     break;
     case GreaterFilter:
     {
-        debug_log("Greater-Or-Equal filter", verbose, traceId);
+        debug_log("Greater-Or-Equal filter", traceId);
         filterStr += parseGreaterFilter(filterMessage.filterMessage.greaterFilterMessage, traceId);
     }
     break;
     case LessFilter:
     {
-        debug_log("Less-Or-Equal filter", verbose, traceId);
+        debug_log("Less-Or-Equal filter", traceId);
         filterStr += parseLessFilter(filterMessage.filterMessage.lessFilterMessage, traceId);
     }
     break;
     case PresenceFilter:
     {
-        debug_log("Presence filter", verbose, traceId);
+        debug_log("Presence filter", traceId);
         filterStr += parsePresenceFilter(filterMessage.filterMessage.presenceFilterMessage, traceId);
     }
     break;
     case ApproximateFilter:
     {
-        debug_log("Approximate Match filter", verbose, traceId);
+        debug_log("Approximate Match filter", traceId);
         filterStr += parseApproximateFilter(filterMessage.filterMessage.approximateFilterMessage, traceId);
     }
     break;
     case ExtensibleFilter:
     {
-        debug_log("Extensible Match filter", verbose, traceId);
+        debug_log("Extensible Match filter", traceId);
         filterStr += parseExtensibleFilter(filterMessage.filterMessage.extensibleFilterMessage, traceId);
     }
     break;
     default:
-        debug_log(std::format("Unknown Search filter type: {}", to_string(filterMessage.filterMessageType)), verbose, traceId);
+        debug_log(std::format("Unknown Search filter type: {}", to_string(filterMessage.filterMessageType)), traceId);
     }
 
     filterStr += ")";
 
-    debug_log(std::format("Single Filter: {}", filterStr), verbose, traceId);
+    debug_log(std::format("Single Filter: {}", filterStr), traceId);
     return filterStr;
 }
 
@@ -1163,16 +1151,16 @@ std::string parseFilter(const LinkedFilterMessage& filterMessage, std::string tr
     string filterStr = parseSingleFilter(filterMessage.filterMessage, traceId);
 
     if (filterMessage.nextMessage.isAttributesOnly == 1) {
-        debug_log("Attributes Only search", verbose, traceId);
+        debug_log("Attributes Only search", traceId);
     }
     else if (filterMessage.nextMessage.pNext) {
         std::stringstream nextStr;
         nextStr << filterMessage.nextMessage.pNext;
-        debug_log(std::format("Parsing next subfilter: {}", nextStr.str()), verbose, traceId);
+        debug_log(std::format("Parsing next subfilter: {}", nextStr.str()), traceId);
         filterStr += parseFilter(*filterMessage.nextMessage.pNext, traceId);
     }
     
-    debug_log(std::format("Linked Filter: {}", filterStr), verbose, traceId);
+    debug_log(std::format("Linked Filter: {}", filterStr), traceId);
     return filterStr;
 }
 
@@ -1190,16 +1178,16 @@ LdapSearchEventParameters populateSearchEventParameters(void* ldapConn, void* th
     eventParams.sourcePort = std::wstring(port.begin(), port.end());
 
     string scope = parseScopeType(ldapMsg->scope);
-    debug_log(std::format("SearchRequest Scope: {}", scope), verbose, traceId);
+    debug_log(std::format("SearchRequest Scope: {}", scope), traceId);
     eventParams.scope = stringToWideString(scope);
 
     string filter = parseFilter(ldapMsg->filterMessage, traceId);
-    debug_log(std::format("SearchRequest Filter: {}", filter), verbose, traceId);
+    debug_log(std::format("SearchRequest Filter: {}", filter), traceId);
     eventParams.filter = convertUTF8ToWideString(filter);
 
     if (ldapMsg->pBaseDn != NULL) {
         string dn(ldapMsg->pBaseDn, ldapMsg->lenBaseDn);
-        debug_log(std::format("SearchRequest DN: {}", dn), verbose, traceId);
+        debug_log(std::format("SearchRequest DN: {}", dn), traceId);
         eventParams.baseDn = convertUTF8ToWideString(dn);
     }
     else {
@@ -1212,7 +1200,7 @@ LdapSearchEventParameters populateSearchEventParameters(void* ldapConn, void* th
 
         if (attribute->pValue != NULL) {
             string attributeStr(attribute->pValue, attribute->lenValue);
-            debug_log(std::format("SearchRequest Attribute: {}", attributeStr), verbose, traceId);
+            debug_log(std::format("SearchRequest Attribute: {}", attributeStr), traceId);
             eventParams.attributes = convertUTF8ToWideString(attributeStr);
         }
 
@@ -1220,7 +1208,7 @@ LdapSearchEventParameters populateSearchEventParameters(void* ldapConn, void* th
         while (pNext) {
             if (pNext->pValue != NULL) {
                 string nextAttributeStr(pNext->pValue, pNext->lenValue);
-                debug_log(std::format("SearchRequest Next Attribute: {}", nextAttributeStr), verbose, traceId);
+                debug_log(std::format("SearchRequest Next Attribute: {}", nextAttributeStr), traceId);
                 eventParams.attributes = eventParams.attributes + L";" + convertUTF8ToWideString(nextAttributeStr);
             }
 
@@ -1234,7 +1222,7 @@ LdapSearchEventParameters populateSearchEventParameters(void* ldapConn, void* th
 int detouredSearchRequestV1(void* pThis, void* thState, void* param1, void* param2, void* ldapRequest, ULONG param3, LDAPSearchMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2, void* param4, void** ldapBerval)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received SearchRequest message", debug, traceId);
+    debug_log("Received SearchRequest message", traceId);
 
     LdapSearchEventParameters eventParams = populateSearchEventParameters(pThis, thState, ldapMsg, traceId);
     RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
@@ -1248,7 +1236,7 @@ int detouredSearchRequestV1(void* pThis, void* thState, void* param1, void* para
     }
 
     int result = realSearchRequestV1(pThis, thState, param1, param2, ldapRequest, param3, ldapMsg, pReferral, pControls, ldapString1, ldapString2, param4, ldapBerval);
-    debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams).c_str(), traceId);
 
     if (shouldAuditRequest(searchRequest, ruleAction)) {
         ldapSearchCalledEvent(eventParams, ruleAction.Action);
@@ -1260,7 +1248,7 @@ int detouredSearchRequestV1(void* pThis, void* thState, void* param1, void* para
 int detouredSearchRequestV2(void* pThis, void* thState, void* param1, void* param2, void* ldapRequest, ULONG param3, LDAPSearchMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2, void* searchLogging, void* param4, void** ldapBerval)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received SearchRequest message", debug, traceId);
+    debug_log("Received SearchRequest message", traceId);
 
     LdapSearchEventParameters eventParams = populateSearchEventParameters(pThis, thState, ldapMsg, traceId);
     RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
@@ -1274,7 +1262,7 @@ int detouredSearchRequestV2(void* pThis, void* thState, void* param1, void* para
     }
 
     int result = realSearchRequestV2(pThis, thState, param1, param2, ldapRequest, param3, ldapMsg, pReferral, pControls, ldapString1, ldapString2, searchLogging, param4, ldapBerval);
-    debug_log(getEventAuditMessage(eventParams), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams), traceId);
     
     if (shouldAuditRequest(searchRequest, ruleAction)) {
         ldapSearchCalledEvent(eventParams, ruleAction.Action);
@@ -1298,7 +1286,7 @@ LdapCompareEventParameters populateCompareEventParameters(void* ldapConn, void* 
 
     if (ldapMsg->pDn) {
         string dn(ldapMsg->pDn, ldapMsg->lenDn);
-        debug_log(std::format("ComareRequest DN: {}", dn), verbose, traceId);
+        debug_log(std::format("ComareRequest DN: {}", dn), traceId);
         eventParams.dn = convertUTF8ToWideString(dn);
     }
     else {
@@ -1307,7 +1295,7 @@ LdapCompareEventParameters populateCompareEventParameters(void* ldapConn, void* 
 
     if (ldapMsg->pAttribute) {
         string attribute(ldapMsg->pAttribute, ldapMsg->lenAttribute);
-        debug_log(std::format("ComareRequest Attribute: {}", attribute), verbose, traceId);
+        debug_log(std::format("ComareRequest Attribute: {}", attribute), traceId);
         eventParams.attribute = convertUTF8ToWideString(attribute);
     }
     else {
@@ -1316,7 +1304,7 @@ LdapCompareEventParameters populateCompareEventParameters(void* ldapConn, void* 
 
     if (ldapMsg->pValue) {
         string value(ldapMsg->pValue, ldapMsg->lenValue);
-        debug_log(std::format("ComareRequest Value: {}", value), verbose, traceId);
+        debug_log(std::format("ComareRequest Value: {}", value), traceId);
         eventParams.value = convertUTF8ToWideString(value);
     }
     else {
@@ -1329,7 +1317,7 @@ LdapCompareEventParameters populateCompareEventParameters(void* ldapConn, void* 
 int detouredCompareRequest(void* pThis, void* thState, void* ldapRequest, LDAPCompareMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received CompareRequest message", debug, traceId);
+    debug_log("Received CompareRequest message", traceId);
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapCompareEventParameters eventParams = populateCompareEventParameters(pThis, thState, ldapMsg, traceId);
@@ -1340,7 +1328,7 @@ int detouredCompareRequest(void* pThis, void* thState, void* ldapRequest, LDAPCo
         result = realCompareRequest(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2);
     }
 
-    debug_log(getEventAuditMessage(eventParams), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams), traceId);
 
     if (shouldAuditRequest(compareRequest, ruleAction)) {
         ldapCompareCalledEvent(eventParams, ruleAction.Action);
@@ -1364,7 +1352,7 @@ LdapExtendedEventParameters populateExtendedEventParameters(void* ldapConn, void
 
     if (ldapMsg->pOid != NULL) {
         string oid(ldapMsg->pOid, ldapMsg->lenOid);
-        debug_log(std::format("ExtendedRequest OID: {}", oid), verbose, traceId);
+        debug_log(std::format("ExtendedRequest OID: {}", oid), traceId);
         eventParams.oid = convertUTF8ToWideString(oid);
     }
     else {
@@ -1373,7 +1361,7 @@ LdapExtendedEventParameters populateExtendedEventParameters(void* ldapConn, void
 
     if (ldapMsg->pData != NULL) {
         wstring data(ldapMsg->pData, ldapMsg->lenData);
-        debug_log(std::format("ExtendedRequest Data: {}", convertWideStringToUTF8(data)), verbose, traceId);
+        debug_log(std::format("ExtendedRequest Data: {}", convertWideStringToUTF8(data)), traceId);
         eventParams.data = data;
     }
     else {
@@ -1386,7 +1374,7 @@ LdapExtendedEventParameters populateExtendedEventParameters(void* ldapConn, void
 int detouredExtendedRequestV4(void* pThis, void* thState, void* ldapRequest, LDAPExtendedMessage* ldapMsg, void** pReferral, void* ldapString1, void* ldapString2, void* ldapOid, void* ldapString3)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received ExtendedRequest message", debug, traceId);
+    debug_log("Received ExtendedRequest message", traceId);
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapExtendedEventParameters eventParams = populateExtendedEventParameters(pThis, thState, ldapMsg, traceId);
@@ -1397,7 +1385,7 @@ int detouredExtendedRequestV4(void* pThis, void* thState, void* ldapRequest, LDA
         result = realExtendedRequestV4(pThis, thState, ldapRequest, ldapMsg, pReferral, ldapString1, ldapString2, ldapOid, ldapString3);
     }
 
-    debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams).c_str(), traceId);
 
     if (shouldAuditRequest(extendedRequest, ruleAction)) {
         ldapExtendedCalledEvent(eventParams, ruleAction.Action);
@@ -1409,7 +1397,7 @@ int detouredExtendedRequestV4(void* pThis, void* thState, void* ldapRequest, LDA
 int detouredExtendedRequestV5(void* pThis, void* thState, void* ldapRequest, LDAPExtendedMessage* ldapMsg, void** pReferral, void** pControls, void* ldapString1, void* ldapString2, void* ldapOid, void* ldapString3)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received ExtendedRequest message", debug, traceId);
+    debug_log("Received ExtendedRequest message", traceId);
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapExtendedEventParameters eventParams = populateExtendedEventParameters(pThis, thState, ldapMsg, traceId);
@@ -1420,7 +1408,7 @@ int detouredExtendedRequestV5(void* pThis, void* thState, void* ldapRequest, LDA
         result = realExtendedRequestV5(pThis, thState, ldapRequest, ldapMsg, pReferral, pControls, ldapString1, ldapString2, ldapOid, ldapString3);
     }
 
-    debug_log(getEventAuditMessage(eventParams).c_str(), debug, traceId);
+    debug_log(getEventAuditMessage(eventParams).c_str(), traceId);
 
     if (shouldAuditRequest(extendedRequest, ruleAction)) {
         ldapExtendedCalledEvent(eventParams, ruleAction.Action);
@@ -1432,29 +1420,29 @@ int detouredExtendedRequestV5(void* pThis, void* thState, void* ldapRequest, LDA
 int detouredInit(void* ldapConn, LPSOCKADDR socketAddress, DWORD addressLength, void* atqContextPublic, void* param4)
 {
     std::string traceId = generateTraceID();
-    debug_log("Received new connection", verbose, traceId);
+    debug_log("Received new connection", traceId);
 
     int result = realInit(ldapConn, socketAddress, addressLength, atqContextPublic, param4);
 
     if (socketAddress->sa_family != AF_INET && socketAddress->sa_family != AF_INET6) {
-        debug_log(std::format("Address type {} is not IPv4/v6", socketAddress->sa_family), verbose, traceId);
+        debug_log(std::format("Address type {} is not IPv4/v6", socketAddress->sa_family), traceId);
         return result;
     }
 
     if (socketAddress == NULL)
     {
-        debug_log("Address is null", verbose, traceId);
+        debug_log("Address is null", traceId);
         return result;
     }
 
     char addressBuffer[MAX_SOCKET_LENGTH];
     DWORD addressBufferLength = MAX_SOCKET_LENGTH;
     if (0 == WSAAddressToStringA(socketAddress, addressLength, NULL, addressBuffer, &addressBufferLength)) {
-        debug_log(std::format("Parsed IP address: {}", addressBuffer), verbose, traceId);
+        debug_log(std::format("Parsed IP address: {}", addressBuffer), traceId);
         addToSocketMapping(ldapConn, addressBuffer, traceId);
     }
     else {
-        debug_log("Failed to resolve IP address", verbose, traceId);
+        debug_log("Failed to resolve IP address", traceId);
     }
 
     return result;
@@ -1463,13 +1451,13 @@ int detouredInit(void* ldapConn, LPSOCKADDR socketAddress, DWORD addressLength, 
 void detouredCleanup(void* ldapConn)
 {
     std::string traceId = generateTraceID();
-    debug_log("Cleaning connection", verbose, traceId);
+    debug_log("Cleaning connection", traceId);
 
     removeSocketFromMapping(ldapConn, traceId);
     removeUserFromMapping(ldapConn, traceId);
 
     realCleanup(ldapConn);
-    debug_log("Connection removed from mapping", verbose, traceId);
+    debug_log("Connection removed from mapping", traceId);
 
     return;
 }
@@ -1477,12 +1465,12 @@ void detouredCleanup(void* ldapConn)
 HRESULT detouredSetSecurityContextAtts(void* ldapConn, void* ldapSecurityContext, ULONG param1, ULONG param2, int param3, void* ldapString)
 {
     std::string traceId = generateTraceID();
-    debug_log("Parsing username", verbose, traceId);
+    debug_log("Parsing username", traceId);
 
     HRESULT result = realSetSecurityContextAtts(ldapConn, ldapSecurityContext, param1, param2, param3, ldapString);
     
     if ((param2 & 2) == 0) {
-        debug_log("Cannot parse username", verbose, traceId);
+        debug_log("Cannot parse username", traceId);
         return result;
     }
     
@@ -1491,14 +1479,14 @@ HRESULT detouredSetSecurityContextAtts(void* ldapConn, void* ldapSecurityContext
     bool success = realGetUserNameA(ldapSecurityContext, &userName);
 
     if (!success || userName == NULL) {
-        debug_log("Failed parsing username", verbose, traceId);
+        debug_log("Failed parsing username", traceId);
         return result;
     } 
 
     wstring userW = wstring(userName);
     string out = convertWideStringToUTF8(userW);
 
-    debug_log("Parsed user " + out, verbose, traceId);
+    debug_log("Parsed user " + out, traceId);
 
     addToUserMapping(ldapConn, out, traceId, true);
 
@@ -1589,12 +1577,16 @@ bool getConfigFromNamedPipe()
         }
 
         write_log("Loaded config");
-        debug_log(jsonConfig, debug);
+        debug_log(jsonConfig);
     }
     else {
         config.Rules = newConfig.Rules;
-        write_log("Updated rules");
-        debug_log(jsonConfig, debug);
+        config.DebugLogging = newConfig.DebugLogging;
+
+        initialize_logger(); 
+
+        write_log("Updated config");
+        debug_log(jsonConfig);
         ldapConfigUpdateEvent();
     }
 

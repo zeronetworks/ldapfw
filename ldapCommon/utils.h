@@ -37,13 +37,6 @@ std::vector<std::wstring> split(const std::wstring&, const wchar_t*);
 
 std::uint8_t* PatternScan(void*, const char*);
 
-enum logLevel
-{
-    info = 0,
-    debug = 1,
-    verbose = 2
-};
-
 bool isIPInSubnet(const std::string&, const std::string&, uint8_t);
 
 bool isIPInCIDR(const std::string&, const std::string&);

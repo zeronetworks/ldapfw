@@ -60,7 +60,7 @@ struct Config {
     int SetSecurityContextAttsOffset;
     int GetUserNameAOffset;
     int GetUserSIDFromCurrentTokenOffset;
-    logLevel DebugLevel;
+    bool DebugLogging;
     std::string LogPath;
 };
 

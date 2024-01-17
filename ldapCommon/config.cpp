@@ -96,6 +96,17 @@ audit extractAuditFromJsonValue(const Json::Value& jsonValue)
     return Audit;
 }
 
+bool getDebugFromJsonValue(const Json::Value& jsonValue)
+{
+    bool debugLog = false;
+
+    if (jsonValue.asString() == "on") {
+        debugLog = true;
+    }
+
+    return debugLog;
+}
+
 const Json::Value parseStringToJson(const std::string& jsonConfig)
 {
     Json::Value root;
@@ -180,7 +191,7 @@ Config loadConfigFromJson(const std::string& jsonConfig)
     }
 
     config.Rules = loadRulesFromJson(root["rules"]);
-    config.DebugLevel = static_cast<logLevel>(getIntFromJsonValue(root["debugLevel"]));
+    config.DebugLogging = getDebugFromJsonValue(root["debug"]);
     config.LogPath = getStringFromJsonValue(root["logPath"]);
 
     const Json::Value offsets = root["offsets"];

@@ -622,8 +622,7 @@ void WINAPI serviceMain(DWORD argc, LPTSTR* argv)
 	// Start a thread that will perform the main task of the service
 	HANDLE hThread = CreateThread(NULL, 0, serviceWorkerThread, NULL, 0, NULL);
 
-	logLevel debugLevel = info;
-	startFirewall(debugLevel);
+	startFirewall();
 	
 	// Wait until our worker thread exits signaling that the service needs to stop
 	WaitForSingleObject(hThread, INFINITE);

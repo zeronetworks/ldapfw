@@ -29,7 +29,7 @@ bool copyDllsToSystemPath();
 
 std::string generateLogPath();
 
-std::string enrichConfig(const std::string&, std::string, logLevel);
+std::string enrichConfig(const std::string&, std::string);
 
 std::string loadConfigFile();
 
@@ -39,7 +39,7 @@ void cleanup();
 
 void installFirewall();
 
-void startFirewall(logLevel);
+void startFirewall();
 
 bool stopFirewall();
 
