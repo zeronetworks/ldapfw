@@ -53,7 +53,7 @@ inline const bool const StringToBool(wchar_t* str)
 	return wcscmp(lowerStr, L"true") == 0 ? true : false;
 }
 
-std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/validate", "/service", "/remove", "/install", "/uninstall", "/update" };
+std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/validate", "/install", "/uninstall", "/update" };
 
 struct compare
 {
@@ -311,10 +311,8 @@ void printHelp()
 	std::cout << "Usage: ldapFwManager /<Command> [options]" << std::endl << std::endl;
 	std::cout << "Command:" << std::endl;
 	std::cout << "----------" << std::endl;
-	std::cout << "/service - install LDAP Firewall as a service" << std::endl;
-	std::cout << "/remove - remove LDAP Firewall service" << std::endl;
-	std::cout << "/install - install and start LDAP Firewall protection" << std::endl;
-	std::cout << "/uninstall - remove LDAP Firewall protection" << std::endl;
+	std::cout << "/install - install LDAP Firewall as a service" << std::endl;
+	std::cout << "/uninstall - remove LDAP Firewall service" << std::endl;
 	std::cout << "/update - reload config.json and update the LDAPFW configuration (while installed)" << std::endl;
 	std::cout << "/status - print status" << std::endl;
 	std::cout << "/validate - verify that the config.json file is formatted correctly" << std::endl;
@@ -660,21 +658,16 @@ int main(int argc, char* argv[])
 	if (isFlagInArgs(argc, argv, "/status")) {
 		printStatus();
 		return 0;
-	} else if (isFlagInArgs(argc, argv, "/service")) {
+	} else if (isFlagInArgs(argc, argv, "/install")) {
 		installFirewall();
 		serviceInstall(SERVICE_DEMAND_START);
 		serviceStart();
 		serviceMakeAutostart();
-	} else if (isFlagInArgs(argc, argv, "/remove")) {
+	} else if (isFlagInArgs(argc, argv, "/uninstall")) {
 		serviceStop();
 		elevateCurrentProcessToSystem();
 		uninstallFirewall();
 		serviceUninstall();
-	} else if (isFlagInArgs(argc, argv, "/install")) {
-		installFirewall();
-		startFirewall();
-	} else if (isFlagInArgs(argc, argv, "/uninstall")) {
-		if (stopFirewall()) uninstallFirewall();
 	} else if (isFlagInArgs(argc, argv, "/update")) {
 		elevateCurrentProcessToSystem();
 
