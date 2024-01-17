@@ -42,3 +42,5 @@ bool isIPInSubnet(const std::string&, const std::string&, uint8_t);
 bool isIPInCIDR(const std::string&, const std::string&);
 
 bool isRunningAsAdmin();
+
+bool isContained(const std::string&, const std::string&);

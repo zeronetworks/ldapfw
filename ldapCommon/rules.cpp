@@ -114,7 +114,7 @@ bool isFilterInRule(const Rule& rule, const std::string& filter)
     if (rule.Filter.empty())
         return true;
 
-    return StringToLower(rule.Filter) == StringToLower(filter);
+    return isContained(StringToLower(filter), StringToLower(rule.Filter));
 }
 
 bool actionToBool(action Action)

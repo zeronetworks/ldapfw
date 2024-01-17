@@ -141,3 +141,7 @@ bool isRunningAsAdmin()
 
     return isElevated;
 }
+
+bool isContained(const std::string& str, const std::string& substring) {
+    return str.find(substring) != std::string::npos;
+}
