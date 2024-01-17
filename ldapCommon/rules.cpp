@@ -70,7 +70,7 @@ bool isDNInRule(const Rule& rule, std::string& dn)
     if (rule.DN.empty()) {
         return true;
     }
-    else if (dn.ends_with(rule.DN)) {
+    else if (StringToLower(dn).ends_with(StringToLower(rule.DN))) {
         return true;
     }
     else {
