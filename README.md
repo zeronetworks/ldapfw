@@ -63,27 +63,19 @@ Usage: ldapFwManager /<Command> [options]
 
 Command:
 ----------
-/service - install LDAP Firewall as a service
-/remove - remove LDAP Firewall service
-/install - install and start LDAP Firewall protection
-/uninstall - remove LDAP Firewall protection
+/install - install LDAP Firewall as a service
+/uninstall - remove LDAP Firewall service
 /update - reload config.json and update the LDAPFW configuration (while installed)
 /status - print status
 /validate - verify that the config.json file is formatted correctly
-/help - show this help message and exit
-
-Debug Options: (use with /install or /status)
-----------
-/v - enable debug logging (stored in %AppData%\LDAPFW)
-/vv - enable verbose debug logging. Warning - this will generate a large logfile and may
- affect performance.
+/help - show this message and exit
 ```
 
 ### Status
 Before installing LDAPFW for the first time, run with `/status` to make sure all prerequisites are met:
 ```
 ldapFwManager.exe /status
-LDAP Firewall v0.0.1
+LDAP Firewall v0.0.7
 
 Status:
 ---------------------
@@ -114,6 +106,14 @@ All configurations are set in the `config.json` file.
     ]
 }
 ```
+
+<b>Note</b>: to turn on verbose logging, add the following key:
+``` 
+    ],
+	"debug": "on"
+}
+``` 
+
 ## Rules
 The `rules` field specifies a list of block / allow rules similar to a classic firewall. Each rule can be defined with the following fields:
 - <b>operations</b> - list of  LDAP operations (add / delete / modify / modifydn / search / compare / extended or `*` for any)
