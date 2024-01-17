@@ -101,7 +101,7 @@ bool isOidInRule(const Rule& rule, std::string& oid)
     if (rule.OID.empty()) {
         return true;
     }
-    else if (rule.OID == oid) {
+    else if (StringToLower(rule.OID) == StringToLower(oid)) {
         return true;
     }
     else {
@@ -114,7 +114,7 @@ bool isFilterInRule(const Rule& rule, const std::string& filter)
     if (rule.Filter.empty())
         return true;
 
-    return rule.Filter == filter;
+    return StringToLower(rule.Filter) == StringToLower(filter);
 }
 
 bool actionToBool(action Action)
