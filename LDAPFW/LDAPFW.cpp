@@ -216,9 +216,9 @@ void installFirewall()
 
 void startFirewall()
 {
-	std::string config = loadConfigFile();
-	validateJsonOrExit(config);
+	validateConfigOrExit();
 
+	std::string config = loadConfigFile();
 	std::string configWithOffsets = "";
 	std::string logPathBeforeElevation = generateLogPath();
 
@@ -427,8 +427,10 @@ bool createSymbolsEnvironmentVariableIfNotExist()
 	return true;
 }
 
-void validateJsonOrExit(const std::string& jsonConfig)
+void validateConfigOrExit()
 {
+	std::string jsonConfig = loadConfigFile();
+
 	Json::Value root;
 	std::stringstream configBuffer;
 	configBuffer << jsonConfig;
@@ -644,8 +646,7 @@ int main(int argc, char* argv[])
 		printHelp();
 		return 0;
 	} else if (isFlagInArgs(argc, argv, "/validate")) {
-		std::string config = loadConfigFile();
-		validateJsonOrExit(config);
+		validateConfigOrExit();
 		std::cout << "Config file is valid";
 		return 0;
 	}
@@ -659,6 +660,7 @@ int main(int argc, char* argv[])
 		printStatus();
 		return 0;
 	} else if (isFlagInArgs(argc, argv, "/install")) {
+		validateConfigOrExit();
 		installFirewall();
 		serviceInstall(SERVICE_DEMAND_START);
 		serviceStart();
@@ -669,6 +671,7 @@ int main(int argc, char* argv[])
 		uninstallFirewall();
 		serviceUninstall();
 	} else if (isFlagInArgs(argc, argv, "/update")) {
+		validateConfigOrExit();
 		elevateCurrentProcessToSystem();
 
 		if (!isLdapFwInstalled()) {
@@ -677,7 +680,6 @@ int main(int argc, char* argv[])
 		}
 
 		std::string config = loadConfigFile();
-		validateJsonOrExit(config);
 
 		std::cout << "Updating LDAP Firewall configuration..." << std::endl;
 

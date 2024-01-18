@@ -33,7 +33,7 @@ std::string enrichConfig(const std::string&, std::string);
 
 std::string loadConfigFile();
 
-void validateJsonOrExit(const std::string&);
+void validateConfigOrExit();
 
 void cleanup();
 
