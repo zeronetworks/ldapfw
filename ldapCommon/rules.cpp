@@ -125,8 +125,10 @@ bool actionToBool(action Action)
         return false;
 }
 
-RuleAction compareRequestWithRules(const std::vector<Rule>& rules, std::wstring sourceAddress, std::wstring securityId, std::wstring eventDN, ldapOperation op, std::vector<std::wstring> entryList, std::wstring eventOid, std::wstring eventFilter = EMPTY_WSTRING)
+std::tuple<RuleAction, int> compareRequestWithRules(const std::vector<Rule>& rules, std::wstring sourceAddress, std::wstring securityId, std::wstring eventDN, ldapOperation op, std::vector<std::wstring> entryList, std::wstring eventOid, std::wstring eventFilter = EMPTY_WSTRING)
 {
+    int count = 0;
+
     for (Rule rule : rules) {
         std::string ip = wideStringToString(sourceAddress);
         std::string user = convertWideStringToUTF8(securityId);
@@ -143,34 +145,36 @@ RuleAction compareRequestWithRules(const std::vector<Rule>& rules, std::wstring 
         bool filterInRule = isFilterInRule(rule, filter);
 
         if (opInRule && ipInRule && userInRule && dnInRule && attributeInRule && oidInRule && filterInRule)
-            return RuleAction(rule.Action, rule.Audit);;
+            return { RuleAction(rule.Action, rule.Audit) , count};
+        else
+            count += 1;
 
     }
 
-    return defaultAction;
+    return { defaultAction, -1 };;
 }
 
-RuleAction getRuleAction(const std::vector<Rule> &rules, const LdapAddEventParameters &eventParams)
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule> &rules, const LdapAddEventParameters &eventParams)
 {
     return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.dn, addRequest, eventParams.entryList, EMPTY_WSTRING);
 }
 
-RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapDelEventParameters& eventParams)
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const LdapDelEventParameters& eventParams)
 {
     return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.dn, deleteRequest, EMPTY_ENTRY_LIST, EMPTY_WSTRING);
 }
 
-RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapModifyEventParameters& eventParams)
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const LdapModifyEventParameters& eventParams)
 {
     return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.dn, modifyRequest, eventParams.entryList, EMPTY_WSTRING);
 }
 
-RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapModifyDNEventParameters& eventParams)
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const LdapModifyDNEventParameters& eventParams)
 {
     return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.oldDn, modifyDNRequest, EMPTY_ENTRY_LIST, EMPTY_WSTRING);
 }
 
-RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapSearchEventParameters& eventParams)
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const LdapSearchEventParameters& eventParams)
 {
     std::vector<std::wstring> entryList = { L":" };
     if (!eventParams.attributes.empty()) {
@@ -180,7 +184,7 @@ RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapSearchEventPa
     return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.baseDn, searchRequest, entryList, EMPTY_WSTRING, eventParams.filter);
 }
 
-RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapCompareEventParameters& eventParams)
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const LdapCompareEventParameters& eventParams)
 {
     std::vector<std::wstring> entryList = { L":" };
     if (!eventParams.attribute.empty()) {
@@ -190,7 +194,7 @@ RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapCompareEventP
     return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.dn, compareRequest, entryList, EMPTY_WSTRING);
 }
 
-RuleAction getRuleAction(const std::vector<Rule>& rules, const LdapExtendedEventParameters& eventParams)
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const LdapExtendedEventParameters& eventParams)
 {
     return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, std::wstring(), extendedRequest, EMPTY_ENTRY_LIST, eventParams.oid);
 }

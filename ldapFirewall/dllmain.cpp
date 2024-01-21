@@ -293,6 +293,18 @@ HRESULT(__thiscall* realSetSecurityContextAtts)(void* ldapConn, void* ldapSecuri
 bool(__thiscall* realGetUserNameA)(void* lpBuffer, void* pcbBuffer);
 ULONG(__thiscall* realGetUserSIDFromCurrentToken)(void* thState, PSID Sid);
 
+std::ostream& operator<<(std::ostream& os, const Rule& rule) {
+    return os << "Operations: " << Join(rule.Operations, ", ") << std::endl
+        << "IPs: " << Join(rule.IPs, ", ") << std::endl
+        << "Users: " << Join(rule.Users, ", ") << std::endl
+        << "Action: " << rule.Action << std::endl
+        << "Audit: " << rule.Audit << std::endl
+        << "DN: " << rule.DN << std::endl
+        << "Attributes: " << Join(rule.Attributes, ", ") << std::endl
+        << "OID: " << rule.OID << std::endl
+        << "Filter: " << rule.Filter;
+}
+
 std::string generateTraceID()
 {
     UUID uuid;
@@ -575,6 +587,19 @@ const std::wstring getActionText(action Action)
     }
 }
 
+void writeRuleHitToLog(int ruleNumber, string traceId)
+{
+    if (ruleNumber == -1) {
+        debug_log("No rule hit", traceId);
+    } else if (ruleNumber >= config.Rules.size()) {
+        debug_log("Error: matched rule not found in config");
+    } else {
+        std::stringstream ss;
+        ss << config.Rules[ruleNumber];
+        debug_log(std::format("Rule #{} hit:\n{}", ruleNumber + 1, ss.str()), traceId);
+    }
+}
+
 bool shouldAuditRequest(ldapOperation op, RuleAction ruleAction)
 {
     if (ruleAction.Action == block) {
@@ -662,7 +687,8 @@ int detouredAddRequest(void* pThis, void* thState, void* ldapRequest, LDAPAddMes
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapAddEventParameters eventParams = populateAddEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == allow) {
@@ -709,7 +735,8 @@ int detouredDelRequest(void* pThis, void* thState, void* ldapRequest, LDAPMessag
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapDelEventParameters eventParams = populateDelEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == allow) {
@@ -799,7 +826,8 @@ int detouredModifyRequest(void* pThis, void* thState, void* ldapRequest, LDAPMes
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapModifyEventParameters eventParams = populateModifyEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == allow) {
@@ -851,7 +879,8 @@ int detouredModifyDNRequest(void* pThis, void* thState, void* ldapRequest, Modif
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapModifyDNEventParameters eventParams = populateModifyDNEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == allow) {
@@ -1225,7 +1254,8 @@ int detouredSearchRequestV1(void* pThis, void* thState, void* param1, void* para
     debug_log("Received SearchRequest message", traceId);
 
     LdapSearchEventParameters eventParams = populateSearchEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == block) {
@@ -1251,7 +1281,8 @@ int detouredSearchRequestV2(void* pThis, void* thState, void* param1, void* para
     debug_log("Received SearchRequest message", traceId);
 
     LdapSearchEventParameters eventParams = populateSearchEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == block) {
@@ -1321,7 +1352,8 @@ int detouredCompareRequest(void* pThis, void* thState, void* ldapRequest, LDAPCo
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapCompareEventParameters eventParams = populateCompareEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == allow) {
@@ -1378,7 +1410,8 @@ int detouredExtendedRequestV4(void* pThis, void* thState, void* ldapRequest, LDA
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapExtendedEventParameters eventParams = populateExtendedEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == allow) {
@@ -1401,7 +1434,8 @@ int detouredExtendedRequestV5(void* pThis, void* thState, void* ldapRequest, LDA
 
     int result = LDAP_INSUFFICIENT_ACCESS;
     LdapExtendedEventParameters eventParams = populateExtendedEventParameters(pThis, thState, ldapMsg, traceId);
-    RuleAction ruleAction = getRuleAction(config.Rules, eventParams);
+    auto [ruleAction, ruleNumber] = getRuleAction(config.Rules, eventParams);
+    writeRuleHitToLog(ruleNumber, traceId);
     eventParams.action = getActionText(ruleAction.Action);
 
     if (ruleAction.Action == allow) {

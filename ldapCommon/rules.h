@@ -12,19 +12,19 @@ bool isOperationInRule(const Rule&, ldapOperation);
 
 std::string stripDomainFromUsername(const std::string&);
 
-RuleAction getRuleAction(const std::vector<Rule>&, const LdapAddEventParameters&);
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapAddEventParameters&);
 
-RuleAction getRuleAction(const std::vector<Rule>&, const LdapDelEventParameters&);
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapDelEventParameters&);
 
-RuleAction getRuleAction(const std::vector<Rule>&, const LdapModifyEventParameters&);
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapModifyEventParameters&);
 
-RuleAction getRuleAction(const std::vector<Rule>&, const LdapModifyDNEventParameters&);
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapModifyDNEventParameters&);
 
-RuleAction getRuleAction(const std::vector<Rule>&, const LdapSearchEventParameters&);
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapSearchEventParameters&);
 
-RuleAction getRuleAction(const std::vector<Rule>&, const LdapCompareEventParameters&);
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapCompareEventParameters&);
 
-RuleAction getRuleAction(const std::vector<Rule>&, const LdapExtendedEventParameters&);
+std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapExtendedEventParameters&);
 
 std::string getEventAuditMessage(const LdapAddEventParameters&);
 

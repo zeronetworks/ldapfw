@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include <ostream>
 #include "utils.h"
 
 enum action
