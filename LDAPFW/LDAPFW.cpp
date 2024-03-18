@@ -24,7 +24,7 @@
 #include "rules.h"
 #include "service.h"
 
-#define LDAPFW_VERSION "0.0.81"
+#define LDAPFW_VERSION "0.0.9"
 #define GLOBAL_LDAPFW_EVENT_UNPROTECT TEXT("Global\\LdapFwUninstalledEvent")
 #define LDAPFW_PIPE_NAME TEXT("\\\\.\\Pipe\\LDAPFW")
 #define PIPE_BUFFER_SIZE 1024

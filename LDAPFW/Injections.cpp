@@ -134,6 +134,10 @@ bool isProcessProtected(const std::wstring& processName)
 			}
 
 		}
+		else {
+			_tprintf(TEXT("Cannot determine if LSA protection is enabled %d \n"), GetLastError());
+			isProtected = false;
+		}
 
 		CloseHandle(pHandle);
 	}
