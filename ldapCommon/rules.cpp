@@ -117,6 +117,23 @@ bool isFilterInRule(const Rule& rule, const std::string& filter)
     return isContained(StringToLower(filter), StringToLower(rule.Filter));
 }
 
+bool isScopeInRule(const Rule& rule, const std::string& scope)
+{
+    if (rule.Scope == anyScope || scope.empty()) {
+        return true;
+    }
+
+    if (scope == "Base" && rule.Scope == base) {
+        return true;
+    } else if (scope == "One Level" && rule.Scope == oneLevel) {
+        return true;
+    } else if (scope == "Subtree" && rule.Scope == subtree) {
+        return true;
+    }
+        
+    return false;
+}
+
 bool actionToBool(action Action)
 {
     if (Action == allow)
@@ -125,7 +142,7 @@ bool actionToBool(action Action)
         return false;
 }
 
-std::tuple<RuleAction, int> compareRequestWithRules(const std::vector<Rule>& rules, std::wstring sourceAddress, std::wstring securityId, std::wstring eventDN, ldapOperation op, std::vector<std::wstring> entryList, std::wstring eventOid, std::wstring eventFilter = EMPTY_WSTRING)
+std::tuple<RuleAction, int> compareRequestWithRules(const std::vector<Rule>& rules, std::wstring sourceAddress, std::wstring securityId, std::wstring eventDN, ldapOperation op, std::vector<std::wstring> entryList, std::wstring eventOid, std::wstring eventFilter = EMPTY_WSTRING, std::wstring eventScope = EMPTY_WSTRING)
 {
     int count = 0;
 
@@ -135,6 +152,7 @@ std::tuple<RuleAction, int> compareRequestWithRules(const std::vector<Rule>& rul
         std::string dn = wideStringToString(eventDN);
         std::string oid = wideStringToString(eventOid);
         std::string filter = wideStringToString(eventFilter);
+        std::string scope = wideStringToString(eventScope);
 
         bool opInRule = isOperationInRule(rule, op);
         bool ipInRule = isIPInRule(rule, ip);
@@ -143,8 +161,9 @@ std::tuple<RuleAction, int> compareRequestWithRules(const std::vector<Rule>& rul
         bool attributeInRule = isAttributeInRule(rule, entryList);
         bool oidInRule = isOidInRule(rule, oid);
         bool filterInRule = isFilterInRule(rule, filter);
+        bool scopeInRule = isScopeInRule(rule, scope);
 
-        if (opInRule && ipInRule && userInRule && dnInRule && attributeInRule && oidInRule && filterInRule)
+        if (opInRule && ipInRule && userInRule && dnInRule && attributeInRule && oidInRule && filterInRule && scopeInRule)
             return { RuleAction(rule.Action, rule.Audit) , count};
         else
             count += 1;
@@ -181,7 +200,7 @@ std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const 
         entryList = split(eventParams.attributes, L";");
     }
 
-    return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.baseDn, searchRequest, entryList, EMPTY_WSTRING, eventParams.filter);
+    return compareRequestWithRules(rules, eventParams.sourceAddress, eventParams.securityId, eventParams.baseDn, searchRequest, entryList, EMPTY_WSTRING, eventParams.filter, eventParams.scope);
 }
 
 std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>& rules, const LdapCompareEventParameters& eventParams)

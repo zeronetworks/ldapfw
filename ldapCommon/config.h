@@ -28,6 +28,14 @@ enum ldapOperation
     unknownRequest
 };
 
+enum ldapSearchScope
+{
+    base,
+    oneLevel,
+    subtree,
+    anyScope
+};
+
 const std::vector<std::string> ANY = { "*" };
 const std::vector<ldapOperation> ANYOPERATION = { anyRequest };
 const std::vector<std::wstring> EMPTY_ENTRY_LIST = { };
@@ -43,6 +51,7 @@ struct Rule {
     std::vector<std::string> Attributes;
     std::string OID;
     std::string Filter;
+    ldapSearchScope Scope;
 };
 
 struct Config {

@@ -123,6 +123,7 @@ The `rules` field specifies a list of block / allow rules similar to a classic f
 - <b>attributes</b> - list of attributes set in the LDAP query (if applies)
 - <b>oid</b> - OID set in the LDAP query (if applies)
 - <b>filter</b> - filter set in a Search query
+- <b>scope</b> - scope set in a Search query (base / one level / subtree)
 
 During an incoming LDAP operation, the first matched rule action applies. If no rule matches, the operation is allowed by default (this behaviour can be modified by setting a global block rule as the final rule).<br><br>
 <b>Note</b>: in the default configuration, Search operations do not generate event logs (except when searching for specific attributes) as the logs can get noisy. This behaviour can be modifying by changing the audit rules.

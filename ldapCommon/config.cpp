@@ -96,6 +96,24 @@ audit extractAuditFromJsonValue(const Json::Value& jsonValue)
     return Audit;
 }
 
+ldapSearchScope extractScopeFromJsonValue(const Json::Value& jsonValue)
+{
+    std::string scopeString = StringToLower(jsonValue.get("scope", "").asString());
+
+    ldapSearchScope Scope = anyScope;
+
+    if (scopeString == "base") {
+        Scope = base;
+    } else if (scopeString == "one level") {
+        Scope = oneLevel;
+    }
+    else if (scopeString == "subtree") {
+        Scope = subtree;
+    }
+    
+    return Scope;
+}
+
 bool getDebugFromJsonValue(const Json::Value& jsonValue)
 {
     bool debugLog = false;
@@ -159,6 +177,7 @@ Rule extractRuleFromJsonValue(const Json::Value& ruleJson)
     rule.Attributes = extractVectorFromJsonArray(ruleJson, "attributes");
     rule.OID = ruleJson.get("oid", "").asString();
     rule.Filter = ruleJson.get("filter", "").asString();
+    rule.Scope = extractScopeFromJsonValue(ruleJson);
 
     return rule;
 }
