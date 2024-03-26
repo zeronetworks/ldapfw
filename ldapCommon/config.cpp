@@ -199,7 +199,7 @@ Config loadConfigFromJson(const std::string& jsonConfig)
     Config config = {};
 
     Json::Value root = parseStringToJson(jsonConfig);
-    
+
     if (!root.isObject()) {
         return config;
     }
@@ -211,6 +211,7 @@ Config loadConfigFromJson(const std::string& jsonConfig)
 
     config.Rules = loadRulesFromJson(root["rules"]);
     config.DebugLogging = getDebugFromJsonValue(root["debug"]);
+
     config.LogPath = getStringFromJsonValue(root["logPath"]);
 
     const Json::Value offsets = root["offsets"];

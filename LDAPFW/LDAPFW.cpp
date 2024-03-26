@@ -24,7 +24,7 @@
 #include "rules.h"
 #include "service.h"
 
-#define LDAPFW_VERSION "0.1.0"
+#define LDAPFW_VERSION "0.1.1"
 #define GLOBAL_LDAPFW_EVENT_UNPROTECT TEXT("Global\\LdapFwUninstalledEvent")
 #define LDAPFW_PIPE_NAME TEXT("\\\\.\\Pipe\\LDAPFW")
 #define PIPE_BUFFER_SIZE 1024
@@ -431,15 +431,15 @@ void validateConfigOrExit()
 {
 	std::string jsonConfig = loadConfigFile();
 
-	Json::Value root;
-	std::stringstream configBuffer;
-	configBuffer << jsonConfig;
-
 	try {
-		configBuffer >> root;
+		loadConfigFromJson(jsonConfig);
 	}
 	catch (Json::RuntimeError& e) {
-		std::cout << "Invalid config.json file";
+		std::cout << "Invalid config.json file: " << e.what();
+		exit(-1);
+	}
+	catch (Json::LogicError& e) {
+		std::cout << "Invalid config.json file: " << e.what();
 		exit(-1);
 	}
 }
@@ -572,21 +572,26 @@ void printStatus() {
 
 	std::string configFile = loadConfigFile();
 
+	Config loadedConfig;
+	bool configValid = false;
+
 	try {
 		configFile = enrichConfig(configFile, "");
+		loadedConfig = loadConfigFromJson(configFile);
+		configValid = true;
 	}
 	catch (LdapFwOffsetException& e) {
 		offsetsValid = false;
 	}
+	catch (...) { }
 
-	Config loadedConfig = loadConfigFromJson(configFile);
-
-	bool readyToInstall = !ldapFwInstalled && offsetsValid;
+	bool readyToInstall = !ldapFwInstalled && offsetsValid && configValid;
 
 	std::cout << "LDAP Firewall v" << LDAPFW_VERSION << std::endl << std::endl;
 	std::cout << "Status:" << std::endl << "---------------------" << std::endl;
 	std::cout << "LDAPFW Installed:\t\t" << BoolToString(ldapFwInstalled) << std::endl;
 	std::cout << "Symbols loaded:\t\t\t" << BoolToString(offsetsValid) << std::endl;
+	std::cout << "Config valid:\t\t\t" << BoolToString(configValid) << std::endl;
 	
 	int color = FOREGROUND_RED;
 	if (ldapFwInstalled) {
@@ -598,7 +603,7 @@ void printStatus() {
 		printInColor(std::format("Ready to install:\t\t{}", BoolToString(readyToInstall)).c_str(), FOREGROUND_RED);
 	}
 
-	if (loadedConfig.DebugLogging == false) return;
+	if (loadedConfig.DebugLogging == false || !configValid) return;
 
 	std::cout << std::endl << std::endl;
 	std::cout << "Resolved offsets:" << std::endl << "---------------------" << std::endl;
