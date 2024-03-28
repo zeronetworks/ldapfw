@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <string>
 #include <format>
+#include <Windows.h>
 #include <json/json.h>
 #include <ldapMessages.h>
 #include "rules.h"
@@ -59,6 +60,43 @@ bool isUserInRule(const Rule& rule, const std::string& user)
 {
     for (std::string ruleUser : rule.Users) {
         if (compareUserStrings(ruleUser, user) || ruleUser == ANY[0])
+            return true;
+    }
+
+    return false;
+}
+
+bool isMemberOfGroup(std::string& groupName) {
+    DWORD sidLen = 0;
+    DWORD domainLen = 0;
+    SID_NAME_USE peUse;
+
+    LookupAccountNameA(NULL, groupName.c_str(), NULL, &sidLen, NULL, &domainLen, &peUse);
+
+    PSID groupSid = (PSID) new TCHAR[sidLen];
+    LPSTR domain = (LPSTR) new TCHAR[domainLen];
+
+    LookupAccountNameA(NULL, groupName.c_str(), groupSid, &sidLen, domain, &domainLen, &peUse);
+
+    if (!IsValidSid(groupSid)) {
+        return false;
+    }
+
+    BOOL isMember = false;
+
+    realImpersonateAnyClient();
+
+    CheckTokenMembership(NULL, groupSid, &isMember);
+
+    realUnImpersonateAnyClient();
+
+    return isMember;
+}
+
+bool isGroupInRule(const Rule& rule)
+{
+    for (std::string ruleGroup : rule.Groups) {
+        if (isMemberOfGroup(ruleGroup) || ruleGroup == ANY[0])
             return true;
     }
 
@@ -157,13 +195,14 @@ std::tuple<RuleAction, int> compareRequestWithRules(const std::vector<Rule>& rul
         bool opInRule = isOperationInRule(rule, op);
         bool ipInRule = isIPInRule(rule, ip);
         bool userInRule = isUserInRule(rule, user);
+        bool groupInRule = isGroupInRule(rule);
         bool dnInRule = isDNInRule(rule, dn);
         bool attributeInRule = isAttributeInRule(rule, entryList);
         bool oidInRule = isOidInRule(rule, oid);
         bool filterInRule = isFilterInRule(rule, filter);
         bool scopeInRule = isScopeInRule(rule, scope);
 
-        if (opInRule && ipInRule && userInRule && dnInRule && attributeInRule && oidInRule && filterInRule && scopeInRule)
+        if (opInRule && ipInRule && userInRule && groupInRule && dnInRule && attributeInRule && oidInRule && filterInRule && scopeInRule)
             return { RuleAction(rule.Action, rule.Audit) , count};
         else
             count += 1;

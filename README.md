@@ -117,6 +117,7 @@ The `rules` field specifies a list of block / allow rules similar to a classic f
 - <b>operations</b> - list of  LDAP operations (add / delete / modify / modifydn / search / compare / extended or `*` for any)
 - <b>ips</b> - list of source IPs / CIDR subnets (or `*` for any)
 - <b>users</b> - list of users (or `*` for any)
+- <b>groups</b> - list of groups (or `*` for any)
 - <b>action</b> - action to perform (allow / block)
 - <b>audit</b> - log operation in the Event Log (on / off)
 - <b>dn</b> - DN set in the LDAP query (if applies)

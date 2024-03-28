@@ -3,6 +3,9 @@
 #include "config.h"
 #include "ldapMessages.h"
 
+__declspec(selectany) void(__thiscall* realImpersonateAnyClient)();
+__declspec(selectany) void(__thiscall* realUnImpersonateAnyClient)();
+
 struct RuleAction {
 	action Action;
 	audit Audit;
@@ -11,6 +14,8 @@ struct RuleAction {
 bool isOperationInRule(const Rule&, ldapOperation);
 
 std::string stripDomainFromUsername(const std::string&);
+
+bool isMemberOfGroup(std::string&);
 
 std::tuple<RuleAction, int> getRuleAction(const std::vector<Rule>&, const LdapAddEventParameters&);
 

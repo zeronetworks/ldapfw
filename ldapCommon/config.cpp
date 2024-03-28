@@ -171,6 +171,7 @@ Rule extractRuleFromJsonValue(const Json::Value& ruleJson)
     rule.Operations = extractOperationFromJsonArray(ruleJson["operations"]);
     rule.IPs = extractVectorFromJsonArray(ruleJson, "ips");
     rule.Users = extractVectorFromJsonArray(ruleJson, "users");
+    rule.Groups = extractVectorFromJsonArray(ruleJson, "groups");
     rule.Action = extractActionFromJsonValue(ruleJson);
     rule.Audit = extractAuditFromJsonValue(ruleJson);
     rule.DN = ruleJson.get("dn", "").asString();
@@ -234,6 +235,8 @@ Config loadConfigFromJson(const std::string& jsonConfig)
     config.SetSecurityContextAttsOffset = getIntFromJsonValue(offsets["setSecurityContextAtts"]);
     config.GetUserNameAOffset = getIntFromJsonValue(offsets["getUserNameA"]);
     config.GetUserSIDFromCurrentTokenOffset = getIntFromJsonValue(offsets["getUserSIDFromCurrentToken"]);
+    config.ImpersonateAnyClientOffset = getIntFromJsonValue(offsets["impersonateAnyClient"]);
+    config.UnImpersonateAnyClientOffset = getIntFromJsonValue(offsets["unImpersonateAnyClient"]);
 
     return config;
 }

@@ -1680,6 +1680,7 @@ bool isConfigValid() {
             config.SetSecurityContextAttsOffset &&
             config.GetUserNameAOffset &&
             config.GetUserSIDFromCurrentTokenOffset &&
+            config.ImpersonateAnyClientOffset &&
             !config.LogPath.empty()
         );
 }
@@ -1710,6 +1711,8 @@ void mainStart()
     realSetSecurityContextAtts = (decltype(realSetSecurityContextAtts))(base + config.SetSecurityContextAttsOffset);
     realGetUserNameA = (decltype(realGetUserNameA))(base + config.GetUserNameAOffset);
     realGetUserSIDFromCurrentToken = (decltype(realGetUserSIDFromCurrentToken))(base + config.GetUserSIDFromCurrentTokenOffset);
+    realImpersonateAnyClient = (decltype(realImpersonateAnyClient))(base + config.ImpersonateAnyClientOffset);
+    realUnImpersonateAnyClient = (decltype(realUnImpersonateAnyClient))(base + config.UnImpersonateAnyClientOffset);
     
     DisableThreadLibraryCalls(myhModule);
     DetourTransactionBegin();

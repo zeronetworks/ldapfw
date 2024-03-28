@@ -45,6 +45,7 @@ struct Rule {
     std::vector<ldapOperation> Operations;
     std::vector<std::string> IPs;
     std::vector<std::string> Users;
+    std::vector<std::string> Groups;
     action Action;
     audit Audit;
     std::string DN;
@@ -70,6 +71,8 @@ struct Config {
     int SetSecurityContextAttsOffset;
     int GetUserNameAOffset;
     int GetUserSIDFromCurrentTokenOffset;
+    int ImpersonateAnyClientOffset;
+    int UnImpersonateAnyClientOffset;
     bool DebugLogging;
     std::string LogPath;
 };

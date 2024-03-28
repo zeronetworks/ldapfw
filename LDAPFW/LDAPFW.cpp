@@ -24,7 +24,7 @@
 #include "rules.h"
 #include "service.h"
 
-#define LDAPFW_VERSION "0.1.1"
+#define LDAPFW_VERSION "0.1.2"
 #define GLOBAL_LDAPFW_EVENT_UNPROTECT TEXT("Global\\LdapFwUninstalledEvent")
 #define LDAPFW_PIPE_NAME TEXT("\\\\.\\Pipe\\LDAPFW")
 #define PIPE_BUFFER_SIZE 1024
@@ -463,6 +463,8 @@ std::string enrichConfig(const std::string& jsonConfig, std::string logPath)
 	root["offsets"]["setSecurityContextAtts"] = calculateFunctionOffset("?SetSecurityContextAtts@LDAP_CONN@@AEAA?AW4_enum1@@PEAVLDAP_SECURITY_CONTEXT@@KKHPEAULDAPString@@@Z");
 	root["offsets"]["getUserNameA"] = calculateFunctionOffset("?GetUserNameA@LDAP_SECURITY_CONTEXT@@QEAAXPEAPEAG@Z");
 	root["offsets"]["getUserSIDFromCurrentToken"] = calculateFunctionOffset("?GetUserSIDFromCurrentToken@@YAKPEAU_THSTATE@@PEAPEAX@Z");
+	root["offsets"]["impersonateAnyClient"] = calculateFunctionOffset("ImpersonateAnyClient");
+	root["offsets"]["unImpersonateAnyClient"] = calculateFunctionOffset("UnImpersonateAnyClient");
 
 	try {
 		root["offsets"]["searchRequest"] = calculateFunctionOffset("?SearchRequest@LDAP_CONN@@AEAA?AW4_enum1@@PEAU_THSTATE@@HPEAHPEAVLDAP_REQUEST@@KPEAULDAPMsg@@PEAPEAUReferral_@@PEAPEAUControls_@@PEAULDAPString@@6PEAKPEAPEAUberval@@@Z");
@@ -620,7 +622,9 @@ void printStatus() {
 	std::cout << "Cleanup:\t\t\t" << loadedConfig.CleanupOffset << std::endl;
 	std::cout << "SetSecurityContextAtts:\t\t" << loadedConfig.SetSecurityContextAttsOffset << std::endl;
 	std::cout << "GetUserNameA:\t\t\t" << loadedConfig.GetUserNameAOffset << std::endl;
-	std::cout << "GetUserSIDFromCurrentToken:\t" << loadedConfig.GetUserSIDFromCurrentTokenOffset;
+	std::cout << "GetUserSIDFromCurrentToken:\t" << loadedConfig.GetUserSIDFromCurrentTokenOffset << std::endl;
+	std::cout << "ImpersonateAnyClient:\t\t" << loadedConfig.ImpersonateAnyClientOffset << std::endl;
+	std::cout << "UnImpersonateAnyClient:\t\t" << loadedConfig.UnImpersonateAnyClientOffset;
 }
 
 bool verifyArguments(int argc, char* argv[])
