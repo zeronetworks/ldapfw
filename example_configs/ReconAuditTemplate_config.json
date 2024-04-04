@@ -1,0 +1,117 @@
+{
+    "rules": [
+        {
+            "info": "Ignore local and admin accounts, add any other account that has abnormal or is privileged",
+            "users": ["NT AUTHORITY\\SYSTEM","<Domain Name>\\Administrator","<Domain Name>\\<DC Name>$"],
+            "action": "allow",
+			"audit": "off"
+        },
+        {
+            "info": "fingerprint hounds",
+            "operations": ["search"],
+            "filter": "805306369",
+            "action": "allow",
+			"audit": "on"
+        },
+        {
+            "info": "fingerprint hounds",
+            "operations": ["search"],
+            "filter": "805306368",
+            "action": "allow",
+			"audit": "on"
+        },
+        {
+            "info": "fingerprint hounds",
+            "operations": ["search"],
+            "filter": "soaphound",
+            "action": "allow",
+			"audit": "on"
+        },
+        {
+            "info": "fingerprint hounds",
+            "operations": ["search"],
+            "attributes": ["profilepath","userpassword","msds-behavior-version","msds-behavior-version","msds-behavior-version","trustattributes","trustdirection","trusttype","unixUserPassword","sIDHistory","operatingSystem","primaryGroupID","NSHostName","certificateTemplates","cACertificate","msPKI-Private-KeyFlag"],
+            "action": "allow",
+			"audit": "on"
+        },
+	    {
+            "info": "ignore base searches, can't be used to enumerate the directory",
+            "operations": ["search"],
+            "scope": "base",
+            "action": "allow",
+			"audit": "off"
+        },
+        {
+            "info": "ignore configuration searches",
+            "operations": ["search"],
+            "action": "allow",
+            "dn": "CN=Configuration,DC=<domain>,DC=<suffix>",
+			"audit": "off"
+        },
+        {
+            "info": "ignore system searches",
+            "operations": ["search"],
+            "action": "allow",
+            "dn": "cn=system,DC=<domain>,DC=<suffix>",
+			"audit": "off"
+        },
+        {
+            "info": "ignore DNS related searches",
+            "operations": ["search"],
+            "action": "allow",
+            "dn": "DnsZones,DC=<domain>,DC=<suffix>",
+			"audit": "off"
+        },
+        {
+            "info": "capture wildcard filters (can be used to retreive any object)",
+            "operations": ["search"],
+            "action": "allow",
+			"dn": "DC=<domain>,DC=<suffix>",
+            "filter": "*",
+            "audit": "on"
+        },
+        {
+            "info": "capture not filters (can also be used to retreive any object)",
+            "operations": ["search"],
+            "action": "allow",
+			"dn": "DC=<domain>,DC=<suffix>",
+            "filter": "!",
+            "audit": "on"
+        },
+         {
+            "info": "ignore common operation of computer accounts",
+            "operations": ["search"],
+            "action": "allow",
+			"dn": "DC=<domain>,DC=<suffix>",
+            "filter": "sAMAccountName=",
+            "audit": "off"
+        },
+        {
+            "info": "ignore common requested attribute",
+            "operations": ["search"],
+            "action": "allow",
+            "attributes": ["thumbnailphoto"],
+            "audit": "off"
+        },
+        {
+            "info": "ignore common operation",
+            "operations": ["search"],
+            "action": "allow",
+            "filter": "proxyAddresses=smtp",
+            "audit": "off"
+        },
+        {
+            "info": "ignore common operation",
+            "operations": ["search"],
+            "action": "allow",
+            "attributes": ["gPLink","gPOptions"],
+			"audit": "off"
+        },
+        {
+            "info": "capture any other operation, potentially malicious",
+            "operations": ["search"],
+            "action": "allow",
+			"audit": "on"
+        }
+    ]
+}
