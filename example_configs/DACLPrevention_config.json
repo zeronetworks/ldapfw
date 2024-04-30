@@ -1,0 +1,27 @@
+{
+    "rules": [
+        {
+            "operations": ["*"],
+            "ips": ["::1"],
+            "action": "allow"
+        },
+        {
+            "operations": ["modify"],
+            "attributes": ["msDS-AllowedToActOnBehalfOfOtherIdentity", "servicePrincipalName", "msDS-AllowedToDelegateTo", "msDS-KeyCredentialLink", "scriptPath", "msTSInitialProgram", "gPCUserExtensionNames", "gPCMachineExtensionNames", "ntSecurityDescriptor", "ms-Mcs-AdmPwdExpirationTime", "msDS-GroupMSAMembership", "altSecurityIdentities", "msDS-AdditionalDnsHostName", "mSMQSignCertificates", "mSMQDigests", "sAMAccountName", "description", "displayName", "userAccountControl", "dNSHostName", "userParameters", "msDS-SupportedEncryptionTypes", "msDS-RevealOnDemandGroup", "gPCFileSysPath", "cACertificate", "primaryGroupID", "operatingSystem", "operatingSystemVersion", "EntryTTL", "userPrincipalName", "userCertificate"],
+            "action": "block"
+        },
+        {
+            "operations": ["add"],
+            "action": "block"
+        },
+        {
+            "operations": ["search"],
+            "audit": "off"
+        },
+        {
+            "operations": ["*"],
+            "action":  "allow",
+            "audit": "on",
+        }
+    ]
+}
