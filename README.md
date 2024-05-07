@@ -10,7 +10,8 @@ The tool is written in C++ and makes use of the [Microsoft Detours](https://gith
 
 Some useful resources to get you started:
 - [Introduction blog post](https://zeronetworks.com/blog/ldap-firewall-level-up-your-dc-security/) - basics of LDAP and overview of the tool   
-- [Technical Deep Dive blog post](https://zeronetworks.com/blog/a-technical-deep-dive-of-ldap-firewall/) - reverse-engineering the Windows LDAP service and how LDAP Firewall works 
+- [Technical Deep Dive blog post](https://zeronetworks.com/blog/a-technical-deep-dive-of-ldap-firewall/) - reverse-engineering the Windows LDAP service and how LDAP Firewall works
+- [Leash the Hounds](https://zeronetworks.com/blog/leash-the-hounds-stop-ldap-recon-attacks/) - how to stop BloodHound and other LDAP-based recon attacks using the LDAP Firewall
 - [Tutorial video](https://www.youtube.com/watch?v=CmV9SDbFW2c) - covers how to install and use the tool
 - [LDAP Firewall Workshop video](https://www.youtube.com/watch?v=XsIzA8yal20) - from DEATHCon 2023
 
