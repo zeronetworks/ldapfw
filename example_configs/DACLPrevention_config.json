@@ -1,9 +1,15 @@
 {
     "rules": [
         {
-            "operations": ["*"],
-            "ips": ["::1"],
-            "action": "allow"
+            "users": ["OREZ\\DC01$", "NT AUTHORITY\\SYSTEM"],
+            "action": "allow",
+            "audit": "off"
+        },
+        {
+            "operations": ["search"],
+            "attributes": ["admincount", "userpassword", "msds-allowedToDelegateTo", "ms-Mcs-AdmPwd", "servicePrincipalName"],
+            "scope": "subtree",
+            "action": "block"
         },
         {
             "operations": ["modify"],
@@ -11,15 +17,10 @@
             "action": "block"
         },
         {
-            "operations": ["add"],
-            "action": "block"
-        },
-        {
             "operations": ["search"],
             "audit": "off"
         },
         {
-            "operations": ["*"],
             "action":  "allow",
             "audit": "on",
         }
