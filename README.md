@@ -130,6 +130,20 @@ The `rules` field specifies a list of block / allow rules similar to a classic f
 During an incoming LDAP operation, the first matched rule action applies. If no rule matches, the operation is allowed by default (this behaviour can be modified by setting a global block rule as the final rule).<br><br>
 <b>Note</b>: in the default configuration, Search operations do not generate event logs (except when searching for specific attributes) as the logs can get noisy. This behaviour can be modifying by changing the audit rules.
 
+## LDAPFW Windows Events
+| Message ID | Symbolic Name           | Description                             |
+|------------|-------------------------|-----------------------------------------|
+| 257        | LDAP_PROTECTION_ADDED   | LDAP Firewall protection installed.     |
+| 258        | LDAP_PROTECTION_REMOVED | LDAP Firewall protection removed.       |
+| 259        | LDAP_ADD_CALL           | An LDAP Add operation was called.       |
+| 260        | LDAP_DELETE_CALL        | An LDAP Delete operation was called.    |
+| 261        | LDAP_MODIFY_CALL        | An LDAP Modify operation was called.    |
+| 262        | LDAP_MODIFYDN_CALL      | An LDAP Modify DN operation was called. |
+| 263        | LDAP_SEARCH_CALL        | An LDAP Search operation was called.    |
+| 264        | LDAP_COMPARE_CALL       | An LDAP Compare operation was called.   |
+| 265        | LDAP_EXTENDED_CALL      | An LDAP Extended operation was called.  |
+| 266        | LDAP_CONFIG_UPDATED     | LDAP Firewall configuration updated.    |
+
 # How LDAP Firewall works
 The LDAP Firewall is built from 3 main components:
 ### ldapFwManager
