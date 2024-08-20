@@ -1,7 +1,7 @@
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/zeronetworks/ldapfw)](https://github.com/zeronetworks/ldapfw/releases/latest)
 ![GitHub all releases](https://img.shields.io/github/downloads/zeronetworks/ldapfw/total)
 
-<p align="center"><img src="LDAPFW_Logo.png" width="350"></p>
+<p align="center"><img src="images/LDAPFW_Logo.png" width="350"></p>
 
 # Introduction
 `LDAP Firewall` is an open-source tool for Windows servers that lets you audit and restrict incoming LDAP requests.<br>
@@ -12,6 +12,7 @@ Some useful resources to get you started:
 - [Introduction blog post](https://zeronetworks.com/blog/ldap-firewall-level-up-your-dc-security/) - basics of LDAP and overview of the tool   
 - [Technical Deep Dive blog post](https://zeronetworks.com/blog/a-technical-deep-dive-of-ldap-firewall/) - reverse-engineering the Windows LDAP service and how LDAP Firewall works
 - [Leash the Hounds](https://zeronetworks.com/blog/leash-the-hounds-stop-ldap-recon-attacks/) - how to stop BloodHound and other LDAP-based recon attacks using the LDAP Firewall
+- [A Defender’s Guide to DACL-Based Attacks via the LDAP Firewall](https://zeronetworks.com/blog/defenders-guide-dacl-based-attacks-ldap-firewall) - explanations and example configurations for how to prevent various LDAP attacks
 - [Tutorial video](https://www.youtube.com/watch?v=CmV9SDbFW2c) - covers how to install and use the tool
 - [LDAP Firewall Workshop video](https://www.youtube.com/watch?v=XsIzA8yal20) - from DEATHCon 2023
 
@@ -31,16 +32,25 @@ The operation also gets written into the Windows Event Log  with the LDAPFW acti
 ## Preventing Attacks with LDAPFW
 This section describes some common LDAP-based attacks that can be mitigated with the LDAP Firewall.<br>
 Sample <i>config.json</i> files can be found in the [example_configs](./example_configs) folder of this repository.
-### sAMAccountName spoofing
-LDAPFW can be configured to block all [Add operations](https://ldap.com/the-ldap-add-operation/) in order to completely prevent [Name Impersonation](https://www.thehacker.recipes/ad/movement/kerberos/samaccountname-spoofing#cve-2021-42278-name-impersonation) ([CVE-2021-42278](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2021-42278)) and thus defend against [sAMAccountName spoofing](https://www.thehacker.recipes/ad/movement/kerberos/samaccountname-spoofing).
-<br>
-<p align="center"><img src="LDAPFW_Screenshot.png"></p>
-<p align="center"><b><i>Audit of an LDAP Add operation being blocked <br>(produced using the <a href="https://github.com/Synzack/ldapper">Ldapper</a> addComputer command)</i></b></p>
-
 ### BloodHound
 Stop [BloodHound](https://github.com/BloodHoundAD/BloodHound) scans by blocking searches on uncommon attributes (such as <i>admincount</i>, <i>userpassword</i> and <i>msds-allowedToDelegateTo</i>).
-<p align="center"><img src="LDAPFW_BH.png"></p>
+<p align="center"><img src="images/LDAPFW_BH.png"></p>
 <p align="center"><b><i>SharpHound unable to obtain entities from LDAP</i></b></p>
+<p align="center"><img src="images/LDAPFW_BH_Blocked.png"></p>
+<p align="center"><b><i>LDAPFW blocking the BloodHound search operation</i></b></p>
+
+### Shadow Credentials
+[This attack](https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab) allows for taking over an account by modifies a user’s _KeyCredentialLink_ attribute. With the LDAP Firewall, you can block modify operations that try to edit this attribute.
+<p align="center"><img src="images/LDAPFW_ShadowCredentials.png"></p>
+<p align="center"><b><i>Whisker unable to modify the KeyCredentialLink attribute</i></b></p>
+
+### Kerberoasting
+Mitigate Kerberoasting and Targeted Keberoasting attacks by preventing access to the _servicePrincipalName_ attribute.
+<p align="center"><img src="images/LDAPFW_KRB.png"></p>
+<p align="center"><b><i>GetUserSPNs</i> unable to enumerate kerberoastable targets</b></p>
+
+<p align="center"><img src="images/LDAPFW_TKRB.png"></p>
+<p align="center"><b>Targeted Kerberoasting unable to modify the <i>servicePrincipalName</i> attribute</b></p>
 
 ### LAPS
 Protect LAPS passwords by monitoring and blocking attempts to read the <i>ms-Mcs-AdmPwd</i> computer attribute. 
@@ -76,7 +86,7 @@ Command:
 Before installing LDAPFW for the first time, run with `/status` to make sure all prerequisites are met:
 ```
 ldapFwManager.exe /status
-LDAP Firewall v0.0.81
+LDAP Firewall v1.0.0
 
 Status:
 ---------------------
