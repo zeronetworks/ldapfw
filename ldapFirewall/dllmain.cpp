@@ -377,22 +377,6 @@ void close_logger() {
     }
 }
 
-void writeOffsetsToLog()
-{
-    debug_log(std::format("AddRequest Offset: {}", config.AddRequestOffset));
-    debug_log(std::format("DelRequestOffset Offset: {}", config.DelRequestOffset));
-    debug_log(std::format("ModifyRequest Offset: {}", config.ModifyRequestOffset));
-    debug_log(std::format("ModifyDNRequest Offset: {}", config.ModifyDNRequestOffset));
-    debug_log(std::format("SearchRequest Offset: {}", config.SearchRequestOffset));
-    debug_log(std::format("CompareRequest Offset: {}", config.CompareRequestOffset));
-    debug_log(std::format("ExtendedRequest Offset: {}", config.ExtendedRequestOffset));
-    debug_log(std::format("Init Offset: {}", config.InitOffset));
-    debug_log(std::format("Cleanup Offset: {}", config.CleanupOffset));
-    debug_log(std::format("SetSecurityContextAtts Offset: {}", config.SetSecurityContextAttsOffset));
-    debug_log(std::format("GetUserNameA Offset: {}", config.GetUserNameAOffset));
-    debug_log(std::format("GetUserSIDFromCurrentToken Offset: {}", config.GetUserSIDFromCurrentTokenOffset));
-}
-
 void addToSocketMapping(void* ldapConn, const std::string& socketInfo, std::string traceId)
 {
     debug_log(std::format("Adding {} to socket mapping", socketInfo), traceId);
@@ -1672,6 +1656,7 @@ bool isConfigValid() {
             config.ModifyRequestOffset &&
             config.ModifyDNRequestOffset &&
             config.SearchRequestOffset &&
+            config.SearchRequestVersion &&
             config.CompareRequestOffset &&
             config.ExtendedRequestOffset &&
             config.ExtendedRequestVersion &&
@@ -1681,6 +1666,7 @@ bool isConfigValid() {
             config.GetUserNameAOffset &&
             config.GetUserSIDFromCurrentTokenOffset &&
             config.ImpersonateAnyClientOffset &&
+            config.UnImpersonateAnyClientOffset &&
             !config.LogPath.empty()
         );
 }
@@ -1696,8 +1682,6 @@ void mainStart()
         ldapUnprotectedEvent();
         return;
     }
-
-    writeOffsetsToLog();
        
     uintptr_t base = (uintptr_t)GetModuleHandle(TEXT("ntdsai.dll"));
 
