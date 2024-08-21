@@ -3,6 +3,8 @@ function Parse-LDAPFWLog {
     param ($Event)
     $EventID = $Event.Id
     $EventType = switch ($EventID) {
+		257 {'Install'}
+		258 {'Uninstall'}
         259 {'Add'}
         260 {'Delete'}
         261 {'Modify'}
@@ -10,6 +12,7 @@ function Parse-LDAPFWLog {
         263 {'Search'}
         264 {'Compare'}
         265 {'Extended'}
+		266 {'ConfigUpdate'}
         default { $EventID }
     }
     $ClientNetworkAddress = [regex]::Match($Event.Message, 'Client Network Address:\s*([\d\.]+)').Groups[1].Value
