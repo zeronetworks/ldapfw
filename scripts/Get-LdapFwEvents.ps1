@@ -16,13 +16,30 @@ function Parse-LDAPFWLog {
         default { $EventID }
     }
 
-    $ClientNetworkAddress = [regex]::Match($Event.Message, 'Client Network Address:\s*([\d\.:a-zU]+)').Groups[1].Value
-    $BaseDN = [regex]::Match($Event.Message, 'Base DN:\s*(.*?)(?=\r|\n)').Groups[1].Value
-    $Filter = [regex]::Match($Event.Message, 'Filter:\s*(.*?)(?=\r|\n)').Groups[1].Value
+    $DN = [regex]::Match($Event.Message, 'DN:\s*(.*?)(?=\r|\n)')
+
     $Attributes = [regex]::Match($Event.Message, 'Attributes:(.\t*)(.*[^\r|\n|\t])').Groups[2].Value
 
     if ([string]::IsNullOrWhiteSpace($Attributes)) {
         $Attributes = ""
+    }
+
+    $EntryList = [regex]::Match($Event.Message, 'Entry List:(.\t*)(.*[^\r|\n|\t])').Groups[2].Value
+
+    if ([string]::IsNullOrWhiteSpace($EntryList)) {
+        $EntryList = ""
+    }
+
+    $Value = [regex]::Match($Event.Message, 'Value:(.\t*)(.*[^\r|\n|\t])').Groups[2].Value
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        $Value = ""
+    }
+
+    $Data = [regex]::Match($Event.Message, 'Data:(.\t*)(.*[^\r|\n|\t])').Groups[2].Value
+
+    if ([string]::IsNullOrWhiteSpace($Data)) {
+        $Data = ""
     }
 
     return New-Object PSObject -Property @{
@@ -30,11 +47,18 @@ function Parse-LDAPFWLog {
         'Event Type' = $EventType
         'TimeCreated' = $Event.TimeCreated
         'Security ID' = [regex]::Match($Event.Message, 'Security ID:\s*(.*?)($|\r\n)').Groups[1].Value
-        'Base DN' = $BaseDN
-        'Filter' = $Filter
+        'Action' = [regex]::Match($Event.Message, 'Action:\s*(.*?)($|\r\n)').Groups[1].Value
+        'DN' = $DN.Groups[1].Value
+        'Filter' = [regex]::Match($Event.Message, 'Filter:\s*(.*?)(?=\r|\n)').Groups[1].Value
         'Scope' = [regex]::Match($Event.Message, 'Scope:\s*(.*?)($|\r\n)').Groups[1].Value
         'Attributes' = $Attributes
-        'Client Network Address' = $ClientNetworkAddress
+        'Entry List' = $EntryList
+        'Value' = $Value
+        'New DN' = $DN.Groups[2].Value
+        'Delete Old' = [regex]::Match($Event.Message, 'Delete Old:\s*(.*?)($|\r\n)').Groups[1].Value
+        'Oid' = [regex]::Match($Event.Message, 'Oid:\s*(.*?)($|\r\n)').Groups[1].Value
+        'Data' = $Data
+        'Client Network Address' = [regex]::Match($Event.Message, 'Client Network Address:\s*([\d\.:a-zU]+)').Groups[1].Value
         'Client Port' = [regex]::Match($Event.Message, 'Client Port:\s*(.*?)($|\r\n)').Groups[1].Value
     }
 }
