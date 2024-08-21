@@ -15,16 +15,16 @@ function Parse-LDAPFWLog {
         266 {'ConfigUpdate'}
         default { $EventID }
     }
-    $ClientNetworkAddress = [regex]::Match($Event.Message, 'Client Network Address:\s*([\d\.]+)').Groups[1].Value
-    if ([string]::IsNullOrWhiteSpace($ClientNetworkAddress)) {
-        $ClientNetworkAddress = "Unknown"
+
+    $ClientNetworkAddress = [regex]::Match($Event.Message, 'Client Network Address:\s*([\d\.:a-zU]+)').Groups[1].Value
+    $BaseDN = [regex]::Match($Event.Message, 'Base DN:\s*(.*?)(?=\r|\n)').Groups[1].Value
+    $Filter = [regex]::Match($Event.Message, 'Filter:\s*(.*?)(?=\r|\n)').Groups[1].Value
+    $Attributes = [regex]::Match($Event.Message, 'Attributes:(.\t*)(.*[^\r|\n|\t])').Groups[2].Value
+
+    if ([string]::IsNullOrWhiteSpace($Attributes)) {
+        $Attributes = ""
     }
-    $BaseDNMatch = [regex]::Match($Event.Message, '(?<=Base DN:\s*)(.*?)(?=\r|\n)')
-    $BaseDN = if ($BaseDNMatch.Success) { $BaseDNMatch.Value.Trim() } else { "Null" }
-    $FilterMatch = [regex]::Match($Event.Message, '(?<=Filter:\s*)(.*?)(?=\r|\n)')
-    $Filter = if ($FilterMatch.Success) { $FilterMatch.Value.Trim() } else { "Null" }
-    $AttributesMatch = [regex]::Match($Event.Message, 'Attributes:\s*(.*?)($|\r\n)')
-    $Attributes = if ($AttributesMatch.Success) { $AttributesMatch.Groups[1].Value } else { "Null" }
+
     return New-Object PSObject -Property @{
         'Log Source' = 'LDAPFW'
         'Event Type' = $EventType
