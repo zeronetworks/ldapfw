@@ -335,7 +335,8 @@ void uninstallFirewall()
 {
     auto lsassProcessId = FindProcessId(L"lsass.exe");
     if (lsassProcessId == 0) {
-        std::cout << "Error, could not find lsass.exe process";
+        std::cout << "Error, could not find lsass.exe process [" << GetLastError() << "]" << std::endl;
+        exit(-1);
     }
 
     std::cout << "Waiting for DLLs to unload";
@@ -747,7 +748,11 @@ int main(int argc, char* argv[])
     }
     else if (isFlagInArgs(argc, argv, "/uninstall")) {
         serviceStop();
-        elevateCurrentProcessToSystem();
+
+        if (!elevateCurrentProcessToSystem()) {
+            exit(-1);
+        }
+
         uninstallFirewall();
         serviceUninstall();
     }
@@ -765,7 +770,10 @@ int main(int argc, char* argv[])
     }
     else if (isFlagInArgs(argc, argv, "/update")) {
         validateConfigOrExit();
-        elevateCurrentProcessToSystem();
+        
+        if (!elevateCurrentProcessToSystem()) {
+            exit(-1);
+        }
 
         if (!isLdapFwInstalled()) {
             std::cout << "LDAPFW not installed";
