@@ -39,7 +39,7 @@ void cleanup();
 
 void installFirewall();
 
-void startFirewall();
+bool startFirewall();
 
 bool stopFirewall();
 

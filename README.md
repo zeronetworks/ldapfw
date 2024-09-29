@@ -86,7 +86,7 @@ Command:
 Before installing LDAPFW for the first time, run with `/status` to make sure all prerequisites are met:
 ```
 ldapFwManager.exe /status
-LDAP Firewall v1.0.0
+LDAP Firewall v1.0.1
 
 Status:
 ---------------------

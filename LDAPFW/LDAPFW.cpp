@@ -24,7 +24,7 @@
 #include "rules.h"
 #include "service.h"
 
-#define LDAPFW_VERSION "1.0.0"
+#define LDAPFW_VERSION "1.0.1"
 #define GLOBAL_LDAPFW_EVENT_UNPROTECT TEXT("Global\\LdapFwUninstalledEvent")
 #define LDAPFW_PIPE_NAME TEXT("\\\\.\\Pipe\\LDAPFW")
 #define PIPE_BUFFER_SIZE 1024
@@ -58,7 +58,7 @@ inline const bool const StringToBool(wchar_t* str)
     return wcscmp(lowerStr, L"true") == 0 ? true : false;
 }
 
-std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/validate", "/install", "/uninstall", "/update" };
+std::vector<std::string> ALLOWED_ARGUMENTS = { "/help", "/status", "/validate", "/install", "/uninstall", "/start", "/stop", "/update" };
 
 struct compare
 {
@@ -136,14 +136,14 @@ bool deleteFileFromSysfolder(std::wstring fileName)
     return true;
 }
 
-void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
+bool sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
 {
     HANDLE hEvent = createGlobalEvent(true, false, globalEventName);
 
     if (hEvent == nullptr)
     {
         _tprintf(TEXT("Could not get handle to event %s, error: %d\n"), globalEventName, GetLastError());
-        return;
+        return false;
     }
 
     if (eSig == eventSignal::signalSetEvent)
@@ -151,6 +151,7 @@ void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
         if (SetEvent(hEvent) == 0)
         {
             _tprintf(TEXT("Setting the event %s failed: %d.\n"), globalEventName, GetLastError());
+            return false;
         }
     }
     else
@@ -158,8 +159,11 @@ void sendSignalToGlobalEvent(wchar_t* globalEventName, eventSignal eSig)
         if (ResetEvent(hEvent) == 0)
         {
             _tprintf(TEXT("Resetting the event %s failed: %d.\n"), globalEventName, GetLastError());
+            return false;
         }
     }
+
+    return true;
 }
 
 bool doesEnvironmentVariableExist(const char* variable)
@@ -172,6 +176,43 @@ bool doesEnvironmentVariableExist(const char* variable)
     }
 }
 
+bool containsLdapFwModule(DWORD dwPID)
+{
+    bool containsLdapFwModule = false;
+
+    HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
+    hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
+
+    if (hModuleSnap == INVALID_HANDLE_VALUE)
+    {
+        _tprintf(TEXT("Error calling CreateToolhelp32Snapshot for pid %u: %d\n"), dwPID, GetLastError());
+        CloseHandle(hModuleSnap);
+        return false;
+    }
+
+    MODULEENTRY32 me32;
+    me32.dwSize = sizeof(MODULEENTRY32);
+
+    if (!Module32First(hModuleSnap, &me32))
+    {
+        _tprintf(TEXT("Error calling Module32First: %d"), GetLastError());
+        CloseHandle(hModuleSnap);
+        return false;
+    }
+
+    while (Module32Next(hModuleSnap, &me32))
+    {
+        if (_tcsstr(me32.szModule, _T("ldapFW.DLL")))
+        {
+            containsLdapFwModule = true;
+            break;
+        }
+    };
+
+    CloseHandle(hModuleSnap);
+    return containsLdapFwModule;
+}
+
 bool isLdapFwInstalled()
 {
     auto lsassProcessId = FindProcessId(L"lsass.exe");
@@ -180,7 +221,7 @@ bool isLdapFwInstalled()
         exit(-1);
     }
 
-    if (isDllLoaded(lsassProcessId, L"c:\\windows\\system32\\ldapfw.dll")) {
+    if (containsLdapFwModule(lsassProcessId)) {
         return true;
     }
     else {
@@ -220,7 +261,7 @@ void installFirewall()
     addEventSource();
 }
 
-void startFirewall()
+bool startFirewall()
 {
     validateConfigOrExit();
 
@@ -228,7 +269,9 @@ void startFirewall()
     std::string configWithOffsets = "";
     std::string logPathBeforeElevation = generateLogPath();
 
-    elevateCurrentProcessToSystem();
+    if (!elevateCurrentProcessToSystem()) {
+        exit(-1);
+    }
 
     if (isLdapFwInstalled()) {
         std::cout << "Already installed";
@@ -249,21 +292,30 @@ void startFirewall()
 
     std::cout << "Installing LDAP Firewall..." << std::endl;
 
+    bool success = false;
+
     createAllGloblEvents();
 
     setupNamedPipe();
 
     if (injectFirewall()) {
         std::cout << "Loading LDAP Firewall configuration..." << std::endl;
-        writeToNamedPipe(configWithOffsets);
+
+        if (writeToNamedPipe(configWithOffsets)) {
+            success = true;
+        }
     }
 
     cleanup();
+
+    return success;
 }
 
 bool stopFirewall()
 {
-    elevateCurrentProcessToSystem();
+    if (!elevateCurrentProcessToSystem()) {
+        return false;
+    }
 
     if (!isLdapFwInstalled()) {
         std::cout << "LDAPFW not installed" << std::endl;
@@ -272,11 +324,11 @@ bool stopFirewall()
 
     std::cout << "Uninstalling LDAP Firewall..." << std::endl;
 
-    sendSignalToGlobalEvent((wchar_t*)GLOBAL_LDAPFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
+    bool success = sendSignalToGlobalEvent((wchar_t*)GLOBAL_LDAPFW_EVENT_UNPROTECT, eventSignal::signalSetEvent);
 
     cleanup();
 
-    return true;
+    return success;
 }
 
 void uninstallFirewall()
@@ -288,7 +340,7 @@ void uninstallFirewall()
 
     std::cout << "Waiting for DLLs to unload";
 
-    while (isDllLoaded(lsassProcessId, L"c:\\windows\\system32\\ldapfw.dll")) {
+    while (containsLdapFwModule(lsassProcessId)) {
         std::cout << ".";
         Sleep(1000);
     }
@@ -298,7 +350,6 @@ void uninstallFirewall()
     deleteFileFromSysfolder(LDAP_FW_DLL_NAME);
     if (!deleteFileFromSysfolder(LDAP_MESSAGES_DLL_NAME)) {
         std::cout << "Please make sure the Event Viewer is closed" << std::endl;
-        exit(-1);
     }
 
     if (deleteEventSource())
@@ -308,7 +359,6 @@ void uninstallFirewall()
     else
     {
         std::cout << "deleteEventSource failed: " << GetLastError() << std::endl;
-        exit(-1);
     }
 }
 
@@ -336,6 +386,10 @@ void setupNamedPipe()
             PIPE_BUFFER_SIZE,
             NMPWAIT_USE_DEFAULT_WAIT,
             NULL);
+
+    if (hNamedPipe == INVALID_HANDLE_VALUE) {
+        std::cout << "Error occurred while creating named pipe: " << GetLastError() << std::endl;
+    }
 }
 
 bool writeToNamedPipe(const std::string config)
@@ -563,9 +617,7 @@ bool copyDllsToSystemPath()
         success = false;
     }
 
-    if (!writeFileToSysfolder(ldapMessagesDllPath, LDAP_MESSAGES_DLL_NAME)) {
-        success = false;
-    }
+    writeFileToSysfolder(ldapMessagesDllPath, LDAP_MESSAGES_DLL_NAME);
 
     return success;
 }
@@ -698,6 +750,18 @@ int main(int argc, char* argv[])
         elevateCurrentProcessToSystem();
         uninstallFirewall();
         serviceUninstall();
+    }
+    else if (isFlagInArgs(argc, argv, "/start")) {
+        validateConfigOrExit();
+        installFirewall();
+        if (!startFirewall()) {
+            return -1;
+        }
+    }
+    else if (isFlagInArgs(argc, argv, "/stop")) {
+        if (!stopFirewall()) {
+            return -1;
+        }
     }
     else if (isFlagInArgs(argc, argv, "/update")) {
         validateConfigOrExit();

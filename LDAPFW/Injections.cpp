@@ -11,6 +11,7 @@ DWORD FindProcessId(const std::wstring& processName)
 
     HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
     if (processesSnapshot == INVALID_HANDLE_VALUE) {
+		_tprintf(TEXT("CreateToolhelp32Snapshot failed with error: [%d]\n"), GetLastError());
         return 0;
     }
 
@@ -32,41 +33,6 @@ DWORD FindProcessId(const std::wstring& processName)
 
     CloseHandle(processesSnapshot);
     return 0;
-}
-
-bool isDllLoaded(DWORD processID, const WCHAR* dllFullPath)
-{
-    HMODULE hMods[1024];
-    DWORD cbNeeded;
-
-	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-		PROCESS_VM_READ,
-		FALSE, processID);
-
-	if (NULL == hProcess) {
-		_tprintf(TEXT("OpenProcess failed for pid %u: [%d]\n"), processID, GetLastError());
-		return true;
-	}
-
-    if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
-    {
-        for (int i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
-        {
-            TCHAR szModName[MAX_PATH];
-
-            if (GetModuleFileNameEx(hProcess, hMods[i], szModName,
-                sizeof(szModName) / sizeof(TCHAR)))
-            {
-                if (_tcsicmp(szModName, dllFullPath) == 0) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    CloseHandle(hProcess);
-
-    return false;
 }
 
 bool hookProcessLoadLibrary(DWORD processID) 

@@ -1,7 +1,7 @@
 #pragma once
 
-void tryAndRunElevated(DWORD pid);
+bool tryAndRunElevated(DWORD pid);
 
-void elevateCurrentProcessToSystem();
+bool elevateCurrentProcessToSystem();
 
 bool setSecurityPrivilege(const wchar_t*);

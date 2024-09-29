@@ -160,13 +160,13 @@ bool setSecurityPrivilege(const wchar_t* privName)
 	return setPrivilege(getAccessToken(0, TOKEN_ADJUST_PRIVILEGES), privName, true);
 }
 
-void tryAndRunElevated(DWORD pid)
+bool tryAndRunElevated(DWORD pid)
 {
 	// Enable core privileges  
 	if (!setSecurityPrivilege(TEXT("SeDebugPrivilege")))
 	{
 		_tprintf(TEXT("Could not get debug privileges!\n"));
-		return;
+		return false;
 	}
 
 	if (!amISYSTEM())
@@ -181,19 +181,29 @@ void tryAndRunElevated(DWORD pid)
 			if (!ImpersonateLoggedOnUser(pToken))
 			{
 				_tprintf(TEXT("ERROR: Could not impersonate SYSTEM [%d]\n"), GetLastError());
-				return;
+				return false;
 			}
 
-			wchar_t Imp_usrename[200];
-			DWORD name_len = 200;
-			GetUserName(Imp_usrename, &name_len);
+			//wchar_t Imp_usrename[200];
+			//DWORD name_len = 200;
+			//GetUserName(Imp_usrename, &name_len);
 			//_tprintf(TEXT("Running as: %s\n"), Imp_usrename);
 		}
+		else {
+			return false;
+		}
 	}
+
+	return true;
 }
 
-void elevateCurrentProcessToSystem()
+bool elevateCurrentProcessToSystem()
 {
 	wchar_t sysProcessName[] = TEXT("winlogon.exe");
-	tryAndRunElevated(getProcessIDFromName(sysProcessName));
+	if (!tryAndRunElevated(getProcessIDFromName(sysProcessName))) {
+		_tprintf(TEXT("ERROR: Unable to elevate process to system [%d]\n"), GetLastError());
+		return false;
+	}
+
+	return true;
 }
