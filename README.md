@@ -120,7 +120,14 @@ All configurations are set in the `config.json` file.
 
 <b>Note</b>: to turn on verbose logging (written to LDAPFW.log), add the following key:
 ```json
-"debug": "on"
+{
+  "rules": [
+    {
+      ...
+    }
+  ],
+  "debug": "on"
+}
 ``` 
 
 ## Rules
