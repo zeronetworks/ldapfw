@@ -74,6 +74,16 @@ bool compareStringsCaseinsensitive(const wchar_t* str1, const wchar_t* str2, siz
     return true;
 }
 
+wchar_t* formatIPAddress(const std::wstring ipAddress)
+{
+    if ((ipAddress.size() >= 2) && (ipAddress[ipAddress.size() - 2] == L'%')) {
+        std::wstring ipv6AddressEscaped = ipAddress + L"!S!";
+        return (wchar_t*)ipv6AddressEscaped.c_str();
+    } else {
+        return (wchar_t*)ipAddress.c_str();
+    }
+}
+
 bool regDelNodeRecurse(HKEY hKeyRoot, LPTSTR lpSubKey)
 {
     LPTSTR lpEnd;
@@ -391,7 +401,7 @@ bool ldapAddCalledEvent(const LdapAddEventParameters& eventParams, bool blockReq
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
     aInsertions[3] = (wchar_t*)entryListAsWString.c_str();
-    aInsertions[4] = (wchar_t*)eventParams.sourceAddress.c_str();
+    aInsertions[4] = formatIPAddress(eventParams.sourceAddress);
     aInsertions[5] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -432,7 +442,7 @@ bool ldapDelCalledEvent(const LdapDelEventParameters& eventParams, bool blockReq
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
-    aInsertions[3] = (wchar_t*)eventParams.sourceAddress.c_str();
+    aInsertions[3] = formatIPAddress(eventParams.sourceAddress);
     aInsertions[4] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -476,7 +486,7 @@ bool ldapModifyCalledEvent(const LdapModifyEventParameters& eventParams, bool bl
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
     aInsertions[3] = (wchar_t*)entryListAsWString.c_str();
-    aInsertions[4] = (wchar_t*)eventParams.sourceAddress.c_str();
+    aInsertions[4] = formatIPAddress(eventParams.sourceAddress);
     aInsertions[5] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -519,7 +529,7 @@ bool ldapModifyDNCalledEvent(const LdapModifyDNEventParameters& eventParams, boo
     aInsertions[2] = (wchar_t*)eventParams.oldDn.c_str();
     aInsertions[3] = (wchar_t*)eventParams.newDn.c_str();
     aInsertions[4] = (wchar_t*)eventParams.deleteOld.c_str();
-    aInsertions[5] = (wchar_t*)eventParams.sourceAddress.c_str();
+    aInsertions[5] = formatIPAddress(eventParams.sourceAddress);
     aInsertions[6] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -563,7 +573,7 @@ bool ldapSearchCalledEvent(const LdapSearchEventParameters& eventParams, bool bl
     aInsertions[3] = (wchar_t*)eventParams.filter.c_str();
     aInsertions[4] = (wchar_t*)eventParams.scope.c_str();
     aInsertions[5] = (wchar_t*)eventParams.attributes.c_str();
-    aInsertions[6] = (wchar_t*)eventParams.sourceAddress.c_str();
+    aInsertions[6] = formatIPAddress(eventParams.sourceAddress);
     aInsertions[7] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -606,7 +616,7 @@ bool ldapCompareCalledEvent(const LdapCompareEventParameters& eventParams, bool 
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
     aInsertions[3] = (wchar_t*)eventParams.attribute.c_str();
     aInsertions[4] = (wchar_t*)eventParams.value.c_str();
-    aInsertions[5] = (wchar_t*)eventParams.sourceAddress.c_str();
+    aInsertions[5] = formatIPAddress(eventParams.sourceAddress);
     aInsertions[6] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -648,7 +658,7 @@ bool ldapExtendedCalledEvent(const LdapExtendedEventParameters& eventParams, boo
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.oid.c_str();
     aInsertions[3] = (wchar_t*)eventParams.data.c_str();
-    aInsertions[4] = (wchar_t*)eventParams.sourceAddress.c_str();
+    aInsertions[4] = formatIPAddress(eventParams.sourceAddress);
     aInsertions[5] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
