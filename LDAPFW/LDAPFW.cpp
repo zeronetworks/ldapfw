@@ -504,6 +504,21 @@ void validateConfigOrExit()
         std::cout << "Invalid config.json file: " << e.what();
         exit(-1);
     }
+
+    std::string logPathBeforeElevation = generateLogPath();
+
+    try {
+        enrichConfig(jsonConfig, logPathBeforeElevation);
+    }
+    catch (LdapFwOffsetException& e) {
+        std::cout << e.what() << std::endl;
+        std::cout << "Failed to load symbols, aborting";
+        exit(-1);
+    }
+    catch (Json::RuntimeError& e) {
+        std::cout << "Failed to parse config.json, aborting";
+        exit(-1);
+    }
 }
 
 std::string enrichConfig(const std::string& jsonConfig, std::string logPath)
