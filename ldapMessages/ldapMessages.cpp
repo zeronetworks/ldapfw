@@ -74,13 +74,16 @@ bool compareStringsCaseinsensitive(const wchar_t* str1, const wchar_t* str2, siz
     return true;
 }
 
-wchar_t* formatIPAddress(const std::wstring ipAddress)
+std::wstring formatIPAddress(const std::wstring ipAddress)
 {
-    if ((ipAddress.size() >= 2) && (ipAddress[ipAddress.size() - 2] == L'%')) {
-        std::wstring ipv6AddressEscaped = ipAddress + L"!S!";
-        return (wchar_t*)ipv6AddressEscaped.c_str();
-    } else {
-        return (wchar_t*)ipAddress.c_str();
+    if (ipAddress == L"::1") {
+        return L"[::1]";
+    }
+    else if ((ipAddress.size() >= 2) && (ipAddress[ipAddress.size() - 2] == L'%')) {
+        return ipAddress + L"!S!";
+    }
+    else {
+        return ipAddress;
     }
 }
 
@@ -162,7 +165,7 @@ bool deleteEventSource()
 {
     wchar_t   szRegPath[MAX_PATH];
 
-    _stprintf_s(szRegPath, _T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s"), PROVIDER_NAME );
+    _stprintf_s(szRegPath, _T("SYSTEM\\CurrentControlSet\\Services\\EventLog\\%s"), PROVIDER_NAME);
 
     // Create the event source registry key
     return regDelNodeRecurse(HKEY_LOCAL_MACHINE, szRegPath);
@@ -205,15 +208,15 @@ void addEventSource()
         _tprintf(TEXT("ERROR: Couldn't create event source registry key: [%d].\n"), GetLastError());
         return;
     }
-        // Name of the PE module that contains the message resource
+    // Name of the PE module that contains the message resource
     if (GetModuleFileName(nullptr, szRegPath, MAX_PATH) == 0)
     {
         _tprintf(TEXT("ERROR: call to GetModuleFileName failed: [%d].\n"), GetLastError());
         return;
     }
-    
+
     // Register EventMessageFile
-    if (RegSetValueEx(hRegKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (PBYTE)szDLLPath, (DWORD)((_tcslen(szDLLPath) + 1) *  (DWORD)sizeof(wchar_t))) != ERROR_SUCCESS)
+    if (RegSetValueEx(hRegKey, _T("EventMessageFile"), 0, REG_EXPAND_SZ, (PBYTE)szDLLPath, (DWORD)((_tcslen(szDLLPath) + 1) * (DWORD)sizeof(wchar_t))) != ERROR_SUCCESS)
     {
         _tprintf(TEXT("ERROR: setting value to EventMessageFile failed: [%d].\n"), GetLastError());
         return;
@@ -233,18 +236,18 @@ void addEventSource()
         _tprintf(TEXT("ERROR: setting value to CategoryCount failed: [%d].\n"), GetLastError());
         return;
     }
-    
+
     // Register supported event types
     DWORD dwTypes = EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE | EVENTLOG_INFORMATION_TYPE;
     if (RegSetValueEx(hRegKey, _T("TypesSupported"), 0, REG_DWORD, (LPBYTE)&dwTypes, sizeof(dwTypes)) != ERROR_SUCCESS)
     {
         _tprintf(TEXT("ERROR: setting value to TypesSupported failed: [%d].\n"), GetLastError());
         return;
-    }   
+    }
 
     if (RegOpenKeyW(HKEY_LOCAL_MACHINE, szRegPathParent, &hRegKeyParent) != ERROR_SUCCESS)
     {
-        _tprintf(TEXT("ERROR: getting parent key %s : [%d].\n"), szRegPathParent,GetLastError());
+        _tprintf(TEXT("ERROR: getting parent key %s : [%d].\n"), szRegPathParent, GetLastError());
         return;
     }
 
@@ -254,10 +257,10 @@ void addEventSource()
         _tprintf(TEXT("ERROR: setting value to MaxSize failed: [%d].\n"), GetLastError());
         return;
     }
-    
+
     _tprintf(TEXT("Finished configuring the Event Log.\n"));
-   RegCloseKey(hRegKey);
-   
+    RegCloseKey(hRegKey);
+
 }
 
 bool ldapProtectedEvent()
@@ -268,18 +271,18 @@ bool ldapProtectedEvent()
     // Open the eventlog
     HANDLE hEventLog = RegisterEventSource(nullptr, PROVIDER_NAME);
 
-    if (hEventLog){
-       
+    if (hEventLog) {
+
         bSuccess = ReportEvent(
-            hEventLog,                  
-            eventType,  
+            hEventLog,
+            eventType,
             LDAPFW_AUDIT,
-            LDAP_PROTECTION_ADDED,           
-            nullptr,                       
-            0,                          
-            0,                          
-            NULL,                
-            nullptr                        
+            LDAP_PROTECTION_ADDED,
+            nullptr,
+            0,
+            0,
+            NULL,
+            nullptr
         );
     }
 
@@ -299,15 +302,15 @@ bool ldapUnprotectedEvent() {
     if (hEventLog) {
 
         bSuccess = ReportEvent(
-            hEventLog,                  
-            eventType,  
-            LDAPFW_AUDIT,               
-            LDAP_PROTECTION_REMOVED,           
-            nullptr,                       
-            0,                          
-            0,                          
-            NULL,                
-            nullptr                        
+            hEventLog,
+            eventType,
+            LDAPFW_AUDIT,
+            LDAP_PROTECTION_REMOVED,
+            nullptr,
+            0,
+            0,
+            NULL,
+            nullptr
         );
     }
 
@@ -384,7 +387,7 @@ bool ldapAddCalledEvent(const LdapAddEventParameters& eventParams, bool blockReq
     bool bSuccess = false;
     WORD eventType = EVENTLOG_AUDIT_SUCCESS;
     DWORD eventCategory = LDAPFW_ADD;
-    LPCWSTR aInsertions[6] = {nullptr};
+    LPCWSTR aInsertions[6] = { nullptr };
     std::wstring entryListAsWString = joinUTF8Vector(eventParams.entryList, ", ");
 
     // Open the eventlog
@@ -396,26 +399,28 @@ bool ldapAddCalledEvent(const LdapAddEventParameters& eventParams, bool blockReq
     if (blockRequest) {
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
-      
+
+    std::wstring formattedIp = formatIPAddress(eventParams.sourceAddress);
+
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
     aInsertions[3] = (wchar_t*)entryListAsWString.c_str();
-    aInsertions[4] = formatIPAddress(eventParams.sourceAddress);
+    aInsertions[4] = formattedIp.c_str();
     aInsertions[5] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
-        
+
         bSuccess = ReportEvent(
-            hEventLog,                  
-            eventType,  
+            hEventLog,
+            eventType,
             eventCategory,
-            LDAP_ADD_CALL,           
-            nullptr,                      
-            6,                        
-            0,                         
-            aInsertions,               
-            nullptr                       
+            LDAP_ADD_CALL,
+            nullptr,
+            6,
+            0,
+            aInsertions,
+            nullptr
         );
     }
 
@@ -439,10 +444,12 @@ bool ldapDelCalledEvent(const LdapDelEventParameters& eventParams, bool blockReq
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
+    std::wstring formattedIp = formatIPAddress(eventParams.sourceAddress);
+
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
-    aInsertions[3] = formatIPAddress(eventParams.sourceAddress);
+    aInsertions[3] = formattedIp.c_str();
     aInsertions[4] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -482,11 +489,13 @@ bool ldapModifyCalledEvent(const LdapModifyEventParameters& eventParams, bool bl
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
+    std::wstring formattedIp = formatIPAddress(eventParams.sourceAddress);
+
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
     aInsertions[3] = (wchar_t*)entryListAsWString.c_str();
-    aInsertions[4] = formatIPAddress(eventParams.sourceAddress);
+    aInsertions[4] = formattedIp.c_str();
     aInsertions[5] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -524,12 +533,14 @@ bool ldapModifyDNCalledEvent(const LdapModifyDNEventParameters& eventParams, boo
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
+    std::wstring formattedIp = formatIPAddress(eventParams.sourceAddress);
+
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.oldDn.c_str();
     aInsertions[3] = (wchar_t*)eventParams.newDn.c_str();
     aInsertions[4] = (wchar_t*)eventParams.deleteOld.c_str();
-    aInsertions[5] = formatIPAddress(eventParams.sourceAddress);
+    aInsertions[5] = formattedIp.c_str();
     aInsertions[6] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -567,13 +578,15 @@ bool ldapSearchCalledEvent(const LdapSearchEventParameters& eventParams, bool bl
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
+    std::wstring formattedIp = formatIPAddress(eventParams.sourceAddress);
+
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.baseDn.c_str();
     aInsertions[3] = (wchar_t*)eventParams.filter.c_str();
     aInsertions[4] = (wchar_t*)eventParams.scope.c_str();
     aInsertions[5] = (wchar_t*)eventParams.attributes.c_str();
-    aInsertions[6] = formatIPAddress(eventParams.sourceAddress);
+    aInsertions[6] = formattedIp.c_str();
     aInsertions[7] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -611,12 +624,14 @@ bool ldapCompareCalledEvent(const LdapCompareEventParameters& eventParams, bool 
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
+    std::wstring formattedIp = formatIPAddress(eventParams.sourceAddress);
+
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.dn.c_str();
     aInsertions[3] = (wchar_t*)eventParams.attribute.c_str();
     aInsertions[4] = (wchar_t*)eventParams.value.c_str();
-    aInsertions[5] = formatIPAddress(eventParams.sourceAddress);
+    aInsertions[5] = formattedIp.c_str();
     aInsertions[6] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -654,11 +669,13 @@ bool ldapExtendedCalledEvent(const LdapExtendedEventParameters& eventParams, boo
         eventType = EVENTLOG_AUDIT_FAILURE;
     }
 
+    std::wstring formattedIp = formatIPAddress(eventParams.sourceAddress);
+
     aInsertions[0] = (wchar_t*)eventParams.securityId.c_str();
     aInsertions[1] = (wchar_t*)eventParams.action.c_str();
     aInsertions[2] = (wchar_t*)eventParams.oid.c_str();
     aInsertions[3] = (wchar_t*)eventParams.data.c_str();
-    aInsertions[4] = formatIPAddress(eventParams.sourceAddress);
+    aInsertions[4] = formattedIp.c_str();
     aInsertions[5] = (wchar_t*)eventParams.sourcePort.c_str();
 
     if (hEventLog) {
@@ -679,19 +696,19 @@ bool ldapExtendedCalledEvent(const LdapExtendedEventParameters& eventParams, boo
     return bSuccess;
 }
 
-bool APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
+bool APIENTRY DllMain(HMODULE hModule,
+    DWORD  ul_reason_for_call,
+    LPVOID lpReserved
+)
 {
     switch (ul_reason_for_call)
     {
-        case DLL_PROCESS_ATTACH:
-            break;
-        case DLL_PROCESS_DETACH:
-            // Close eventlog
-            if (hEventLog != nullptr) DeregisterEventSource(hEventLog);
-            break;
+    case DLL_PROCESS_ATTACH:
+        break;
+    case DLL_PROCESS_DETACH:
+        // Close eventlog
+        if (hEventLog != nullptr) DeregisterEventSource(hEventLog);
+        break;
     }
     return true;
 }
